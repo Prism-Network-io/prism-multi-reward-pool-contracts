@@ -103,7 +103,7 @@ Same as eject, for all reward pools.
 
 Removes a specific reward pool as defined by the `_pid`.
 
-## removeAllRewardPools()
+### removeAllRewardPools()
 
 Removes all of the added reward pools.
 
