@@ -221,4 +221,12 @@ contract Deflector is Ownable, IDeflector {
                 currentCost
             );
     }
+
+    function getUserBoostLevel(address stakingPool, address user, address boostToken) external view returns(uint256) {
+        Pool storage pool = pools[stakingPool];
+        User storage user = pool.users[user];
+        
+        return user.levelPerToken[boostToken];
+        
+    }
 }
