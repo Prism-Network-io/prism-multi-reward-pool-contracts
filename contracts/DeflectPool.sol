@@ -200,11 +200,11 @@ contract DeflectPool is LPTokenWrapper {
         // loop through all the reward pools for a user
         for (uint i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
-            
-            if (address(pool.rewardTokenAddress) == address(0)) {
+            uint256 reward = rewardsInPool[i][msg.sender].rewards;
+
+            if (address(pool.rewardTokenAddress) == address(0) || reward == 0) {
                 continue;
             }   else {
-                    uint256 reward = rewardsInPool[i][msg.sender].rewards;
                     rewardsInPool[i][msg.sender].rewards = 0;
                     pool.rewardTokenAddress.safeTransfer(msg.sender, reward);
                     emit RewardPaid(msg.sender, address(pool.rewardTokenAddress), reward);
