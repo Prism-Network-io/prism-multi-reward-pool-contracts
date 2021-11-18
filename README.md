@@ -24,7 +24,23 @@ The costs should be specified in the units of the token i.e. if a token has 6 de
 
 If levels already exist for the pool, the new boosts are appended and added as new levels to the pool. Otherwise, they are created from scratch. In either case, each new cost per level **must** be greater than the last one. As was the original implementation, the costs denote the **total units necessary** to achieve it rather than the **per level cost** i.e. for costs `[100, 110]` the first level will require `100` units in total and the second level will require `110` units in total meaning that to go from level 1 to level 2 one would require to deposit only `10` units.
 
+#### updateLevel(address \_user, address \_token, uint256 \_nextLevel, uint256 \_balance)
+
+This function updates the boost to a level specified by the nextLevel parameter.
+
 ### View Functions
+
+#### calculateBoostedBalance(address \_user, uint256 \_balance)
+
+Determines the boosted balance for a user, utilising their balance and applying any boosts to produce their effective staking balance.
+
+#### calculateCost(address \_user, address \_token, uint256 \_nextLevel)
+
+Determines the cost for a user to level up their boost to a level specified by the nextLevel parameter.
+
+#### getUserBoostLevel(address \_stakingPool, adddress \_user, address \_boostToken)
+
+Retrieves the users current boost level for a staking pool.
 
 ## DeflectPool.sol
 
@@ -58,59 +74,59 @@ The amount of funds to withdraw from the contract when already staking. The user
 
 Acquires any pending rewards and withdraws the full balance of the user.
 
-### getReward()
+#### getReward()
 
 Allows a user to claim any pending reward tokens they have.
 
-### getRewardCompound()
+#### getRewardCompound()
 
 Allows a user to claim any pending reward tokens they have. If any of the reward tokens are the same as the staking token, then instead of claiming the rewards the user's stake is instead increased.
 
-### purchase(address _token, uint256 _newLevel)
+#### purchase(address _token, uint256 _newLevel)
 
 A function enabling the purchase of a local boost for the pool by paying in the `_token`. The local boost must exist in `Deflector` otherwise this call will fail.
 
 Additionally, the user must have approved the `_token` amount of tokens necessary for the level they want to achieve to the contract.
 
-### sync()
+#### sync()
 
 A function enabling a user to update their boosted balance in case they have minted more PRISM. Should only be invoked in such a case.
 
-### addRewardPool(IERC20Metadata _rewardToken, uint256 _duration)
+#### addRewardPool(IERC20Metadata _rewardToken, uint256 _duration)
 
 Invoked by the owner of the contract to add a new reward pool.
 
 - `_rewardToken`: The token to be paid out
 - `_duration`: The duration of the reward pool in seconds
 
-### notifyRewardAmount(uint256 _pid, uint256 _reward)
+#### notifyRewardAmount(uint256 _pid, uint256 _reward)
 
 Should be invoked by the deployer of the pool once they have supplied the sufficient amount of reward tokens to the contract. Starts the emission period.
 
 - `_pid`: The id of the pool
 - `reward`: The amount of reward tokens to start the pool with
 
-### eject(uint256 _pid)
+#### eject(uint256 _pid)
 
 An administrative function enabling the owner to withdraw any remainder from the contract once it has finished. This exists because calculations cannot be 100% accurate and some dust will remain in the contract. Can only be used after the reward pool duration has finished.
 
-### ejectAll()
+#### ejectAll()
 
 Same as eject, for all reward pools.
 
-### removeRewardPool(uint256 _pid)
+#### removeRewardPool(uint256 _pid)
 
 Removes a specific reward pool as defined by the `_pid`.
 
-### removeAllRewardPools()
+#### removeAllRewardPools()
 
 Removes all of the added reward pools.
 
-### kill(uint256 _pid)
+#### kill(uint256 _pid)
 
 Immediately ends the entered reward pool. Should be used with caution as it prevents future rewards from being distributed.
 
-### emergencyWithdraw()
+#### emergencyWithdraw()
 
 A function permitting users to withdraw their funds in case of an emergency. This can happen if `kill` is used maliciously for example.
 
@@ -118,16 +134,25 @@ A function permitting users to withdraw their funds in case of an emergency. Thi
 
 Enables the deployer of the contract to set a new treasury address.
 
-## View Functions
+### View Functions
 
-### earned(address account, uint256 _pid)
+#### earned(address account, uint256 _pid)
 
 Returns the amount of tokens availiable for the user to claim in the input reward pool.
 
-### getUserMultiplier()
+#### getUserMultiplier()
 
 Gets the current multiplier the user has on the contract.
 
-### getLevelCost(address _token, address _level)
+#### getLevelCost(address _token, address _level)
 
 Returns the amount of `_token` tokens that need to be approved to the contract to achieve the desired `_level` via `purchase`.
+
+## LPTokenWrapper.sol
+
+Used for the core features of DeflectPool.sol such as stake & withdraw. Also implements the reduction on the withdrawal fee (devfee) from holding PRISM tokens. The initial fee reductions of devfee are in three tiers that are defined in the constructor but can be edited afterwards through the editFeeReduceVariables function.
+
+- `unstakeFeeReduceLvl#Amount`: Defines the amount of PRISM tokens required for the user to hold to get that # Discount Level.
+- `unstakeFeeReduceLvl#Discount`: Defines the discount to be applied to the withdraw fee for that # Discount Level.
+
+
