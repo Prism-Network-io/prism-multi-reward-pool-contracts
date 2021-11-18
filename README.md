@@ -39,7 +39,7 @@ The arguments in sequence are:
 - `_treasury`: The address to send the treasury portion of a purchased local boost
 - `_devFund`: The dev address to receive the purchased boost at
 - `_devFee`: The percentage of fees that should be imposed when withdrawing, denoted assuming a denominator of `1000` as is with `Deflector`
-- `_burnFee`: The percentage of fees that ???
+- `_burnFee`: Used to account for tokens that have burn on transfers or similar mechanisms. Modifies users balance to match what they have staked after transfer fees
 - `_prism`: The address of the Prism token for deployed network
 
 Only the new / important functions will be detailed below, other functions such as `rewardPerToken` function equivalently to how other such implementations work.
@@ -47,27 +47,26 @@ Only the new / important functions will be detailed below, other functions such 
 ### Active Functions
 
 #### stake(uint256 amount)
-https://testnet.bscscan.com/tx/0xc21631633eb3aa3e997cbb0752d1460ac7b9026bf65460f9bf3cad09640fe786
 
 Invoked by users who wish to stake a set amount of the `_stakingToken`. They must have approved the contract before invoking this, otherwise the call will fail.
 
 #### withdraw(uint256 amount)
-https://testnet.bscscan.com/tx/0x1fbf95c7833fc7a7f6da430285d65499520d59cd0cfc64b52ccfeeecd05a73da
 
 The amount of funds to withdraw from the contract when already staking. The user must have already staked this amount or greater to be able to withdraw it.
 
 #### exit()
-https://testnet.bscscan.com/tx/0xdb585c08f461b990e823b193ac36b500debf82242c16d9c622776f8ef4af8eaf
 
 Acquires any pending rewards and withdraws the full balance of the user.
 
 ### getReward()
-https://testnet.bscscan.com/tx/0xeb27858e25e4448f17b1200e5efa2681c60e2938e4a4c9e8b5c5b135d908758f 
 
 Allows a user to claim any pending reward tokens they have.
 
+### getRewardCompound()
+
+Allows a user to claim any pending reward tokens they have. If any of the reward tokens are the same as the staking token, then instead of claiming the rewards the user's stake is instead increased.
+
 ### purchase(address _token, uint256 _newLevel)
-https://testnet.bscscan.com/tx/0x497eb6a7baf6b0d149a1353c84e8f1a25bda80e618f7e488c97c6ae26dad90bc 
 
 A function enabling the purchase of a local boost for the pool by paying in the `_token`. The local boost must exist in `Deflector` otherwise this call will fail.
 
