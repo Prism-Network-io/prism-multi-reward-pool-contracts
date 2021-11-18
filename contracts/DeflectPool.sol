@@ -212,6 +212,29 @@ contract DeflectPool is LPTokenWrapper {
         }
     }
 
+    function getRewardCompound() public {
+        updateReward(msg.sender);
+        
+        // loop through all the reward pools for a user
+        for (uint i = 0; i < poolInfo.length; i++) {
+            PoolInfo storage pool = poolInfo[i];
+            uint256 reward = rewardsInPool[i][msg.sender].rewards;
+
+            if (address(pool.rewardTokenAddress) == address(0) || reward == 0) {
+                continue;
+            }   else {
+                    rewardsInPool[i][msg.sender].rewards = 0;
+
+                    if (address(pool.rewardTokenAddress) == address(stakingToken)) {
+                        stake(reward);
+                    } else {
+                        pool.rewardTokenAddress.safeTransfer(msg.sender, reward);
+                        emit RewardPaid(msg.sender, address(pool.rewardTokenAddress), reward);
+                    }
+                }
+        }
+    }
+
     /** @dev Purchase a multiplier level, same level cannot be purchased twice */
     function purchase(address _token, uint256 _newLevel) external {
 
