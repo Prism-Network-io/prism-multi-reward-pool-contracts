@@ -154,5 +154,3 @@ Used for the core features of DeflectPool.sol such as stake & withdraw. Also imp
 
 - `unstakeFeeReduceLvl#Amount`: Defines the amount of PRISM tokens required for the user to hold to get that # Discount Level.
 - `unstakeFeeReduceLvl#Discount`: Defines the discount to be applied to the withdraw fee for that # Discount Level.
-
-

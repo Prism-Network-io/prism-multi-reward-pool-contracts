@@ -212,6 +212,7 @@ contract DeflectPool is LPTokenWrapper {
         }
     }
 
+    /** @dev Sends out the reward tokens to the user, while also re-staking reward tokens if it is the same as the staking tokens */
     function getRewardCompound() public {
         updateReward(msg.sender);
         

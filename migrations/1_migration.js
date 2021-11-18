@@ -4,27 +4,14 @@ const Web3 = require("web3");
 const DeflectPool = artifacts.require("DeflectPool.sol");
 const SatelliteDeflector = artifacts.require("SatelliteDeflector.sol");
 
-// const bPRISM = "0x4cf12dd46bab9afc94e049342fd75a9eaff5d096";
-// const prismDev = "0xd6F8da21cB98e9Eb3Cd27A9034E1A71D17beC9ed";
-// const prismTreasury = "0x5abbd94bb0561938130d83fda22e672110e12528";
-// const deflector = "0x7d23640d3C3a8E37e8858f7309EcD5d4d4c418c1";
-
 const _stakingToken = "0x3df2C04B0eC486F09Fc89C943377F18c2EEE28a2";
-const _deflector = "0x1E9A8d388Db730528F42fEF220b18f168DCa72BA";
+const _deflector = "0xb6F016F879200107cA5b94A7A7A6C01B48eE415b";
 const _treasury = "0xb3C912a583b365f7B4CAdB705B7735e1E10fAC03";
 const _devFund = "0xc62Ca0808Dd2b1029c634dA732423EcFbe89683f";
 const _devFee = 1;
 const _burnFee = 1;
 const _prism = "0x6225f4247eB126BbafE2855841F60E91BBb8a43c";
 const boostToken = "0xAef9068d17CA94632e2d240B1CfCA02E585C9eff";
-const rewardToken = "0x1074Fa4068f8eC1112a48f61cDc68e9953d08C18";
-
-
-// module.exports = async function (deployer, network) {
-//   console.log("start deploy");  
-//   await deployer.deploy(DeflectPool, _stakingToken, _deflector, _treasury, _devFund, _devFee, _burnFee, _prism);
-//   console.log("Contract Deployed");
-// }
 
 const deployDeflector = async (deployer) => {
   let deflector;
@@ -39,7 +26,7 @@ const deployPool = async (name, deployer) => {
     await deployer.deploy(DeflectPool, _stakingToken, _deflector, _treasury, _devFund, _devFee, _burnFee, _prism);
 
     pool = await DeflectPool.deployed();
-    // pool = await DeflectPool.at("0xe47725e21Ad28f6285E050Af2aD7E3E1CA0a0831");
+    // pool = await DeflectPool.at("0x9073913C37a7b15072Fa4af4ff7aebEe70cDA176");
 
     let deflector = await SatelliteDeflector.at(_deflector);
     console.log("Pool ", name, pool.address);
@@ -81,9 +68,6 @@ const deployPool = async (name, deployer) => {
   };
   
   module.exports = async function (deployer) {
-    // let deflectorBSCTEST = await SatelliteDeflector.at("0x1E9A8d388Db730528F42fEF220b18f168DCa72BA");
-
-    // let deflectorBSCTEST = await deployDeflector(deployer);
     await deployPool("Pool", deployer);
     console.log("Contract Deployed")
   };
