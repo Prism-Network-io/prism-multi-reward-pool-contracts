@@ -308,7 +308,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         updateReward(msg.sender);
 
         uint256 boostedBalance = deflector.calculateBoostedBalance(msg.sender, _balances[msg.sender].balance);
-        require(boostedBalance > _balances[msg.sender].boostedBalance, "DeflectPool::sync: Invalid sync invocation");
+        require(boostedBalance > _balances[msg.sender].boostedBalance, "Invalid sync invocation");
         // Adjust new level
         adjustBoostedBalance(boostedBalance);
     }
@@ -436,9 +436,9 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     /** @dev Callable only after the pool has started and the pools reward distribution period has finished */
     function emergencyWithdraw(uint256 _pid) external nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
-        require(block.timestamp >= pool.periodFinish.add(12 hours), "DeflectPool::emergencyWithdraw: Cannot emergency withdraw before period finishes or pool has started");
+        require(block.timestamp >= pool.periodFinish.add(12 hours), "Cannot emergency withdraw before period finishes or pool has started");
         uint256 fullWithdrawal = pool.rewardTokenAddress.balanceOf(msg.sender);
-        require(fullWithdrawal > 0, "DeflectPool::emergencyWithdraw: Cannot withdraw 0");
+        require(fullWithdrawal > 0, "emergencyWithdraw: Cannot withdraw 0");
         super.withdraw(fullWithdrawal, msg.sender);
         emit Withdrawn(msg.sender, fullWithdrawal);
     }

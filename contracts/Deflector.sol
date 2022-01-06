@@ -66,7 +66,7 @@ contract Deflector is Ownable, IDeflector {
     modifier onlyPool() {
         require(
             pools[msg.sender].exists,
-            "Deflector::onlyPool: Insufficient Privileges"
+            "Insufficient Privileges"
         );
         _;
     }
@@ -117,7 +117,7 @@ contract Deflector is Ownable, IDeflector {
     ) external onlyOwner() {
         require(
             costs.length == percentages.length,
-            "Deflector::addLocalBoost: Incorrect cost & percentage length"
+            "Incorrect cost & percentage length"
         );
         Pool storage pool = pools[_pool];
 
@@ -138,7 +138,7 @@ contract Deflector is Ownable, IDeflector {
     ) external onlyOwner() {
         require(
             costs.length == percentages.length,
-            "Deflector::addLocalBoost: Incorrect cost & percentage length"
+            "Incorrect cost & percentage length"
         );
         Pool storage pool = pools[_pool];
         for (uint256 i = 0; i < costs.length; i++) {
@@ -208,7 +208,7 @@ contract Deflector is Ownable, IDeflector {
         User storage user = pool.users[_user];
         require(
             _nextLevel != 0 && _nextLevel <= pool.localBoosts[_token].length,
-            "Deflector::calculateCost: Incorrect Level Specified"
+            "Incorrect Level Specified"
         );
         uint256 currentLevel = user.levelPerToken[_token];
         uint256 currentCost =

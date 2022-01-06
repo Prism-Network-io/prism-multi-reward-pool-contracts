@@ -39,7 +39,7 @@ contract ERC20MintSnapshot is ERC20 {
     {
         require(
             blockNumber < block.number,
-            "ERC20MintSnapshot::getPriorMints: not yet determined"
+            "not yet determined"
         );
 
         uint32 nCheckpoints = numCheckpoints[account];
@@ -81,7 +81,7 @@ contract ERC20MintSnapshot is ERC20 {
         uint224 value =
             safe224(
                 amount,
-                "ERC20MintSnapshot::_beforeTokenTransfer: Amount minted exceeds limit"
+                "Amount minted exceeds limit"
             );
         if (from == address(0) && value > 0) {
             uint32 totalMintNum = numCheckpoints[TOTAL_MINT];
@@ -93,7 +93,7 @@ contract ERC20MintSnapshot is ERC20 {
                 add224(
                     totalMintOld,
                     value,
-                    "ERC20MintSnapshot::_beforeTokenTransfer: mint amount overflows"
+                    "mint amount overflows"
                 );
             _writeCheckpoint(TOTAL_MINT, totalMintNum, totalMintNew);
 
@@ -104,7 +104,7 @@ contract ERC20MintSnapshot is ERC20 {
                 add224(
                     minterOld,
                     value,
-                    "ERC20MintSnapshot::_beforeTokenTransfer: mint amount overflows"
+                    "mint amount overflows"
                 );
             _writeCheckpoint(to, minterNum, minterNew);
         }
@@ -118,7 +118,7 @@ contract ERC20MintSnapshot is ERC20 {
         uint32 blockNumber =
             safe32(
                 block.number,
-                "ERC20MintSnapshot::_writeCheckpoint: block number exceeds 32 bits"
+                "block number exceeds 32 bits"
             );
 
         if (

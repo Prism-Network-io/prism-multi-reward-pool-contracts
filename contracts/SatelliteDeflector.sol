@@ -66,12 +66,12 @@ contract SatelliteDeflector is Ownable, IDeflector {
     GlobalBoostLevel[] public globalBoosts;
     
     modifier onlyPool() {
-        require(pools[msg.sender].exists, "Deflector::onlyPool: Insufficient Privileges");
+        require(pools[msg.sender].exists, "Insufficient Privileges");
         _;
     }
 
     modifier onlyOperator() {
-        require(isOperator[msg.sender], "Deflector::onlyOperator: Only operator can take action");
+        require(isOperator[msg.sender], "Only operator can take action");
         _;
     }
 
@@ -103,7 +103,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
     }
 
     function addLocalBoost(address _pool, address _token, uint256[] calldata costs, uint256[] calldata percentages) external onlyOwner() {
-        require(costs.length == percentages.length, "Deflector::addLocalBoost: Incorrect cost & percentage length");
+        require(costs.length == percentages.length, "Incorrect cost & percentage length");
         Pool storage pool = pools[_pool];
 
         if (pool.localBoosts[_token].length == 0) pool.boostTokens.push(_token);
@@ -121,7 +121,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
     ) external onlyOwner() {
         require(
             costs.length == percentages.length,
-            "Deflector::addLocalBoost: Incorrect cost & percentage length"
+            "Incorrect cost & percentage length"
         );
         Pool storage pool = pools[_pool];
         for (uint256 i = 0; i < costs.length; i++) {
@@ -181,7 +181,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
     function calculateCost(address _user, address _token, uint256 _nextLevel) external view override returns (uint256) {
         Pool storage pool = pools[msg.sender];
         User storage user = pool.users[_user];
-        require(_nextLevel != 0 && _nextLevel <= pool.localBoosts[_token].length, "Deflector::calculateCost: Incorrect Level Specified");
+        require(_nextLevel != 0 && _nextLevel <= pool.localBoosts[_token].length, "Incorrect Level Specified");
         uint256 currentLevel = user.levelPerToken[_token];
         uint256 currentCost = currentLevel == 0 ? 0 : pool.localBoosts[_token][currentLevel.sub(1)].cumulativeCost;
         return pool.localBoosts[_token][_nextLevel.sub(1)].cumulativeCost.sub(currentCost);
