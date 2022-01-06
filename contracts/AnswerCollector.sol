@@ -53,10 +53,11 @@ contract AnswerCollector is Ownable {
       external
       onlyOperator()
   {
-      if (_lastSync > deflector.lastSync()) {
-          deflector.syncPriorMints(_users, _values, _lastSync);
-          emit SyncPriorMints(_users, _values, _lastSync);
-      }
+    require(_lastSync > deflector.lastSync(), "Invalid last sync");
+    
+    deflector.syncPriorMints(_users, _values, _lastSync);
+    emit SyncPriorMints(_users, _values, _lastSync);
+
   }
 
   modifier onlyOperator() {
