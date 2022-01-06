@@ -124,7 +124,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     /* @dev Updates the rewards a user has earned */
     function updateReward(address account) internal {
         // loop through all reward pools for user
-        for (uint i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
             
             if (address(pool.rewardTokenAddress) == address(0)) {
@@ -241,7 +241,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         updateReward(msg.sender);
         
         // loop through all the reward pools for a user
-        for (uint i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
             uint256 reward = rewardsInPool[i][msg.sender].rewards;
 
@@ -260,7 +260,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         updateReward(msg.sender);
         
         // loop through all the reward pools for a user
-        for (uint i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
             uint256 reward = rewardsInPool[i][msg.sender].rewards;
 
@@ -395,7 +395,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     /** @dev Ejects any remaining tokens from all reward pools */
     function ejectAll() public onlyOwner() {
         // loop through all reward pools to eject all
-        for (uint i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
             
             if (address(pool.rewardTokenAddress) == address(0)) {
@@ -418,7 +418,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
 
     /** @dev Removes all reward pools */
     function removeAllRewardPools() external onlyOwner {
-        for (uint i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
             addedRewardTokens[address(pool.rewardTokenAddress)] = false;
         }
