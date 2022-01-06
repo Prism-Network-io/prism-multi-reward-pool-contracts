@@ -129,6 +129,15 @@ abstract contract LPTokenWrapper is Ownable {
     uint256 _unstakeFeeReduceLvl2Discount, uint256 _unstakeFeeReduceLvl3Discount
     ) external onlyOwner() {
 
+        require(
+            _unstakeFeeReduceLvl1Amount > 0 &&
+            _unstakeFeeReduceLvl2Amount > 0 &&
+            _unstakeFeeReduceLvl3Amount > 0 &&
+            _unstakeFeeReduceLvl1Discount > 0 &&
+            _unstakeFeeReduceLvl2Discount > 0 &&
+            _unstakeFeeReduceLvl3Discount > 0, "Value must be greater than 0"
+        );
+
         unstakeFeeReduceLvl1Amount = _unstakeFeeReduceLvl1Amount;
         unstakeFeeReduceLvl2Amount = _unstakeFeeReduceLvl2Amount;
         unstakeFeeReduceLvl3Amount = _unstakeFeeReduceLvl3Amount;
