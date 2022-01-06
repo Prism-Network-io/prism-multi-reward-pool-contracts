@@ -257,7 +257,7 @@ contract DeflectPool is LPTokenWrapper {
 
         // Transfer the bonus cost into the treasury and dev fund.
         IERC20Metadata(_token).safeTransferFrom(msg.sender, devFund, devPortion);
-        IERC20Metadata(_token).safeTransferFrom(msg.sender, treasury, cost - devPortion);
+        IERC20Metadata(_token).safeTransferFrom(msg.sender, treasury, cost.sub(devPortion));
     }
 
     /** @dev Sync after minting more prism */
@@ -317,7 +317,7 @@ contract DeflectPool is LPTokenWrapper {
         PoolInfo storage pool = poolInfo[_pid];
         
         // Sets the pools finish time to end after duration length
-        pool.periodFinish = block.timestamp + pool.duration;
+        pool.periodFinish = block.timestamp.add(pool.duration);
 
         // Update reward values
         updateRewardPerTokenStored(_pid);
@@ -347,7 +347,7 @@ contract DeflectPool is LPTokenWrapper {
     function eject(uint256 _pid) public onlyOwner() {
         PoolInfo storage pool = poolInfo[_pid];
 
-        require(block.timestamp >= pool.periodFinish + 12 hours, "Cannot eject before period finishes or pool has started");
+        require(block.timestamp >= pool.periodFinish.add(12 hours), "Cannot eject before period finishes or pool has started");
         uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
         pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
     }
@@ -361,7 +361,7 @@ contract DeflectPool is LPTokenWrapper {
             if (address(pool.rewardTokenAddress) == address(0)) {
                 continue;
             }   else {
-                    require(block.timestamp >= pool.periodFinish + 12 hours, "Cannot eject before period finishes or pool has started, check all reward pool durations");
+                    require(block.timestamp >= pool.periodFinish.add(12 hours), "Cannot eject before period finishes or pool has started, check all reward pool durations");
                     uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
                     pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
                 }
@@ -396,7 +396,7 @@ contract DeflectPool is LPTokenWrapper {
     /** @dev Callable only after the pool has started and the pools reward distribution period has finished */
     function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
-        require(block.timestamp >= pool.periodFinish + 12 hours, "DeflectPool::emergencyWithdraw: Cannot emergency withdraw before period finishes or pool has started");
+        require(block.timestamp >= pool.periodFinish.add(12 hours), "DeflectPool::emergencyWithdraw: Cannot emergency withdraw before period finishes or pool has started");
         uint256 fullWithdrawal = pool.rewardTokenAddress.balanceOf(msg.sender);
         require(fullWithdrawal > 0, "DeflectPool::emergencyWithdraw: Cannot withdraw 0");
         super.withdraw(fullWithdrawal, msg.sender);
