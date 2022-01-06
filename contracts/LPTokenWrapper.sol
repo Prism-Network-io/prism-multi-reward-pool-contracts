@@ -80,8 +80,8 @@ abstract contract LPTokenWrapper is Ownable {
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
         if (burnFee > 0 ) {
-            uint tokenBurnBalance = amount.mul(burnFee).div(10000);
-            uint stakedBalance = amount.sub(tokenBurnBalance);
+            uint256 tokenBurnBalance = amount.mul(burnFee).div(10000);
+            uint256 stakedBalance = amount.sub(tokenBurnBalance);
             _balances[msg.sender].balance = _balances[msg.sender].balance.add(
             stakedBalance
            );
