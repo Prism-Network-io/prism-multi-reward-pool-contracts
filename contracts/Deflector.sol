@@ -174,7 +174,7 @@ contract Deflector is Ownable, IDeflector {
         override
         returns (uint256)
     {
-        uint256 mintedPrism = prism.getPriorMints(_user, block.number - 1);
+        uint256 mintedPrism = prism.getPriorMints(_user, block.number.sub(1));
 
         // Calculate Global Boost
         uint256 loopLimit = globalBoosts.length;
@@ -184,7 +184,7 @@ contract Deflector is Ownable, IDeflector {
         }
 
         uint256 totalBoost;
-        if (i > 0) totalBoost = globalBoosts[i - 1].percentage;
+        if (i > 0) totalBoost = globalBoosts[i.sub(1)].percentage;
 
         // Calculate Local Boost
         Pool storage pool = pools[msg.sender];
@@ -195,7 +195,7 @@ contract Deflector is Ownable, IDeflector {
             address token = pool.boostTokens[i];
             uint256 userLevel = pool.users[_user].levelPerToken[token];
             if (userLevel == 0) continue;
-            totalBoost += pool.localBoosts[token][userLevel - 1].percentage;
+            totalBoost += pool.localBoosts[token][userLevel.sub(1)].percentage;
         }
         return _balance.mul(totalBoost) / PERCENTAGE_DENOMINATOR;
     }
@@ -215,9 +215,9 @@ contract Deflector is Ownable, IDeflector {
         uint256 currentCost =
             currentLevel == 0
                 ? 0
-                : pool.localBoosts[_token][currentLevel - 1].cumulativeCost;
+                : pool.localBoosts[_token][currentLevel.sub(1)].cumulativeCost;
         return
-            pool.localBoosts[_token][_nextLevel - 1].cumulativeCost.sub(
+            pool.localBoosts[_token][_nextLevel.sub(1)].cumulativeCost.sub(
                 currentCost
             );
     }
