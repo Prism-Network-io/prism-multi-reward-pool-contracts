@@ -26,6 +26,13 @@ abstract contract LPTokenWrapper is Ownable {
     uint256 public unstakeFeeReduceLvl1Discount;
     uint256 public unstakeFeeReduceLvl2Discount;
     uint256 public unstakeFeeReduceLvl3Discount;
+
+    event unstakeFeeReduceLvl1AmountEvent(uint256 unstakeFeeReduceLvl1Amount, uint256 _unstakeFeeReduceLvl1Amount);
+    event unstakeFeeReduceLvl2AmountEvent(uint256 unstakeFeeReduceLvl2Amount, uint256 _unstakeFeeReduceLvl2Amount);
+    event unstakeFeeReduceLvl3AmountEvent(uint256 unstakeFeeReduceLvl3Amount, uint256 _unstakeFeeReduceLvl3Amount);
+    event unstakeFeeReduceLvl1DiscountEvent(uint256 unstakeFeeReduceLvl1Discount, uint256 _unstakeFeeReduceLvl1Discount);
+    event unstakeFeeReduceLvl2DiscountEvent(uint256 unstakeFeeReduceLvl2Discount, uint256 _unstakeFeeReduceLvl2Discount);
+    event unstakeFeeReduceLvl3DiscountEvent(uint256 unstakeFeeReduceLvl3Discount, uint256 _unstakeFeeReduceLvl3Discount);
     
     struct Balance {
         uint256 balance;
@@ -144,5 +151,12 @@ abstract contract LPTokenWrapper is Ownable {
         unstakeFeeReduceLvl1Discount = _unstakeFeeReduceLvl1Discount;
         unstakeFeeReduceLvl2Discount = _unstakeFeeReduceLvl2Discount;
         unstakeFeeReduceLvl3Discount = _unstakeFeeReduceLvl3Discount;
+
+        emit unstakeFeeReduceLvl1AmountEvent(unstakeFeeReduceLvl1Amount, _unstakeFeeReduceLvl1Amount);
+        emit unstakeFeeReduceLvl2AmountEvent(unstakeFeeReduceLvl2Amount, _unstakeFeeReduceLvl2Amount);
+        emit unstakeFeeReduceLvl3AmountEvent(unstakeFeeReduceLvl3Amount, _unstakeFeeReduceLvl3Amount);
+        emit unstakeFeeReduceLvl1DiscountEvent(unstakeFeeReduceLvl1Discount, _unstakeFeeReduceLvl1Discount);
+        emit unstakeFeeReduceLvl2DiscountEvent(unstakeFeeReduceLvl2Discount, _unstakeFeeReduceLvl2Discount);
+        emit unstakeFeeReduceLvl3DiscountEvent(unstakeFeeReduceLvl3Discount, _unstakeFeeReduceLvl3Discount);
     }
 }
