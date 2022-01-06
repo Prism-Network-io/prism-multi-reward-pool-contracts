@@ -34,7 +34,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
     using SafeMath for uint256;
 
     uint256 constant private PERCENTAGE_DENOMINATOR = 1000;
-    uint public lastSync; // last block number on ETH synced
+    uint256 public lastSync; // last block number on ETH synced
 
     struct GlobalBoostLevel {
         uint256 lowerBound;
@@ -94,7 +94,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
         isOperator[_operator] = _isOperator;
     }
 
-    function syncPriorMints(address[] memory _users, uint256[] memory _values, uint _lastSync) external onlyOperator() {
+    function syncPriorMints(address[] memory _users, uint256[] memory _values, uint256 _lastSync) external onlyOperator() {
         require(_users.length == _values.length, "Sync: Invalid array length");
         for (uint256 i = 0; i < _users.length; i++) {
             priorMints[_users[i]]  = _values[i];
