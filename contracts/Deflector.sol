@@ -97,7 +97,6 @@ contract Deflector is Ownable, IDeflector {
         address[] memory boostTokens = new address[](lengthBoostToken);
         LocalBoostLevel[] memory localBoostLevel =
             new LocalBoostLevel[](lengthlocalBoostLevel);
-        // boostTokens[0] = address(0);
         for (uint256 i = 0; i < lengthBoostToken; i++) {
             boostTokens[i] = pools[pool].boostTokens[i];
         }
