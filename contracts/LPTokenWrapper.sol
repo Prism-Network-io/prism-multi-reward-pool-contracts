@@ -56,9 +56,9 @@ abstract contract LPTokenWrapper is Ownable {
         burnFee = _burnFee;
         prism = IERC20(_prism);
 
-        unstakeFeeReduceLvl1Amount = 25000000000000000000;
-        unstakeFeeReduceLvl2Amount = 50000000000000000000;
-        unstakeFeeReduceLvl3Amount = 100000000000000000000;
+        unstakeFeeReduceLvl1Amount = 25_000_000_000_000_000_000;
+        unstakeFeeReduceLvl2Amount = 50_000_000_000_000_000_000;
+        unstakeFeeReduceLvl3Amount = 100_000_000_000_000_000_000;
         unstakeFeeReduceLvl1Discount = 25;
         unstakeFeeReduceLvl2Discount = 50;
         unstakeFeeReduceLvl3Discount = 100;
