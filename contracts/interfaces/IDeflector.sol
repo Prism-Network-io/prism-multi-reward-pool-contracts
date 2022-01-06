@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 interface IDeflector {
     function calculateBoostedBalance(address _user, uint256 _balance)
