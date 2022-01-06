@@ -162,7 +162,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
         }
 
         uint256 totalBoost;
-        if (i > 0) totalBoost = globalBoosts[i - 1].percentage;
+        if (i > 0) totalBoost = globalBoosts[i.sub(1)].percentage;
 
         // Calculate Local Boost
         Pool storage pool = pools[msg.sender];
@@ -173,7 +173,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
             address token = pool.boostTokens[i];
             uint256 userLevel = pool.users[_user].levelPerToken[token];
             if (userLevel == 0) continue;
-            totalBoost += pool.localBoosts[token][userLevel - 1].percentage;
+            totalBoost += pool.localBoosts[token][userLevel.sub(1)].percentage;
         }
         return _balance.mul(totalBoost) / PERCENTAGE_DENOMINATOR;
     }
@@ -183,7 +183,7 @@ contract SatelliteDeflector is Ownable, IDeflector {
         User storage user = pool.users[_user];
         require(_nextLevel != 0 && _nextLevel <= pool.localBoosts[_token].length, "Deflector::calculateCost: Incorrect Level Specified");
         uint256 currentLevel = user.levelPerToken[_token];
-        uint256 currentCost = currentLevel == 0 ? 0 : pool.localBoosts[_token][currentLevel - 1].cumulativeCost;
-        return pool.localBoosts[_token][_nextLevel - 1].cumulativeCost.sub(currentCost);
+        uint256 currentCost = currentLevel == 0 ? 0 : pool.localBoosts[_token][currentLevel.sub(1)].cumulativeCost;
+        return pool.localBoosts[_token][_nextLevel.sub(1)].cumulativeCost.sub(currentCost);
     }
 }
