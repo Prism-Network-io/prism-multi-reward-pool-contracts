@@ -316,9 +316,6 @@ contract DeflectPool is LPTokenWrapper {
 
         PoolInfo storage pool = poolInfo[_pid];
         
-        // Sets the pools finish time to end after duration length
-        pool.periodFinish = block.timestamp.add(pool.duration);
-
         // Update reward values
         updateRewardPerTokenStored(_pid);
 
