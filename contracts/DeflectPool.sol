@@ -17,6 +17,49 @@ import "./LPTokenWrapper.sol";
 import "./interfaces/IDeflector.sol";
 import "./interfaces/IERC20Metadata.sol";
 
+abstract contract ReentrancyGuard {
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
+
+    uint256 private _status;
+
+    constructor() public {
+        _status = _NOT_ENTERED;
+    }
+
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and making it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, _notEntered will be true
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+
+        // Any calls to nonReentrant after this point will fail
+        _status = _ENTERED;
+
+        _;
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _status = _NOT_ENTERED;
+    }
+}
+
 /**
  * @title DeflectPool
  * @author DEFLECT PROTOCOL
@@ -25,7 +68,7 @@ import "./interfaces/IERC20Metadata.sol";
  * * * NOTE: A withdrawal fee of 1.5% is included which is sent to the treasury address. Fee is reduced by holding PRISM * * *
  */
 
-contract DeflectPool is LPTokenWrapper {
+contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
 
     IDeflector public immutable deflector;
@@ -145,7 +188,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Staking function which updates the user balances in the parent contract */
-    function stake(uint256 amount) public override {
+    function stake(uint256 amount) public override nonReentrant {
         require(amount > 0, "Cannot stake 0");
 
         updateReward(msg.sender);
@@ -160,7 +203,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
-    function withdraw(uint256 amount, address) public override {
+    function withdraw(uint256 amount, address) public override nonReentrant {
         require(amount > 0, "Cannot withdraw 0");
         updateReward(msg.sender);
 
@@ -188,13 +231,13 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
-    function exit() external {
+    function exit() external nonReentrant {
         getReward();
         withdraw(balanceOf(msg.sender), msg.sender);
     }
 
     /** @dev Sends out the reward tokens to the user */
-    function getReward() public {
+    function getReward() public nonReentrant {
         updateReward(msg.sender);
         
         // loop through all the reward pools for a user
@@ -213,7 +256,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Sends out the reward tokens to the user, while also re-staking reward tokens if it is the same as the staking tokens */
-    function getRewardCompound() public {
+    function getRewardCompound() public nonReentrant {
         updateReward(msg.sender);
         
         // loop through all the reward pools for a user
@@ -237,7 +280,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Purchase a multiplier level, same level cannot be purchased twice */
-    function purchase(address _token, uint256 _newLevel) external {
+    function purchase(address _token, uint256 _newLevel) external nonReentrant {
 
         updateReward(msg.sender);
         
@@ -391,7 +434,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Callable only after the pool has started and the pools reward distribution period has finished */
-    function emergencyWithdraw(uint256 _pid) external {
+    function emergencyWithdraw(uint256 _pid) external nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         require(block.timestamp >= pool.periodFinish.add(12 hours), "DeflectPool::emergencyWithdraw: Cannot emergency withdraw before period finishes or pool has started");
         uint256 fullWithdrawal = pool.rewardTokenAddress.balanceOf(msg.sender);
