@@ -96,7 +96,8 @@ contract SatelliteDeflector is Ownable, IDeflector {
 
     function syncPriorMints(address[] memory _users, uint256[] memory _values, uint256 _lastSync) external onlyOperator() {
         require(_users.length == _values.length, "Sync: Invalid array length");
-        for (uint256 i = 0; i < _users.length; i++) {
+        uint256 arraysize = _users.length;
+        for (uint256 i = 0; i < arraysize; i++) {
             priorMints[_users[i]]  = _values[i];
         }
         lastSync = _lastSync;
@@ -108,7 +109,8 @@ contract SatelliteDeflector is Ownable, IDeflector {
 
         if (pool.localBoosts[_token].length == 0) pool.boostTokens.push(_token);
 
-        for (uint256 i = 0; i < costs.length; i++) {
+        uint256 arraysize = costs.length;
+        for (uint256 i = 0; i < arraysize; i++) {
             pool.localBoosts[_token].push(LocalBoostLevel(costs[i], percentages[i]));
         }
     }
@@ -124,7 +126,8 @@ contract SatelliteDeflector is Ownable, IDeflector {
             "Incorrect cost & percentage length"
         );
         Pool storage pool = pools[_pool];
-        for (uint256 i = 0; i < costs.length; i++) {
+        uint256 arraysize = costs.length;
+        for (uint256 i = 0; i < arraysize; i++) {
             pool.localBoosts[_token][i] = LocalBoostLevel(
                 costs[i],
                 percentages[i]

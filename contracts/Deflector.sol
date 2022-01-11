@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
-pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 /*
     ▓█████▄ ▓█████   █████▒██▓    ▓█████  ▄████▄  ▄▄▄█████▓ ▒█████   ██▀███
@@ -104,8 +104,6 @@ contract Deflector is Ownable, IDeflector {
         for (uint256 i = 0; i < lengthlocalBoostLevel; i++) {
             localBoostLevel[i] = pools[pool].localBoosts[_token][i];
         }
-        //  = pools[pool].boostTokens;
-        //  = pools[pool].localBoosts;
         return (boostTokens, localBoostLevel);
     }
 
@@ -123,7 +121,9 @@ contract Deflector is Ownable, IDeflector {
 
         if (pool.localBoosts[_token].length == 0) pool.boostTokens.push(_token);
 
-        for (uint256 i = 0; i < costs.length; i++) {
+        uint256 arraysize = costs.length;
+
+        for (uint256 i = 0; i < arraysize; i++) {
             pool.localBoosts[_token].push(
                 LocalBoostLevel(costs[i], percentages[i])
             );

@@ -239,9 +239,10 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     /** @dev Sends out the reward tokens to the user */
     function getReward() public nonReentrant {
         updateReward(msg.sender);
-        
+        uint256 arraysize = poolInfo.length;
+
         // loop through all the reward pools for a user
-        for (uint256 i = 0; i < poolInfo.length; i++) {
+        for (uint256 i = 0; i < arraysize; i++) {
             PoolInfo storage pool = poolInfo[i];
             uint256 reward = rewardsInPool[i][msg.sender].rewards;
 
