@@ -149,6 +149,14 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         return Math.min(block.timestamp, pool.periodFinish);
     }
 
+     /* @dev Returns the current rate of rewards per token */
+    function endDate(uint256 _pid) public view returns (uint256) {
+
+        PoolInfo storage pool = poolInfo[_pid];
+
+        return pool.periodFinish;
+    }
+
     /* @dev Returns the current rate of rewards per token */
     function rewardPerToken(uint256 _pid) public view returns (uint256) {
 
