@@ -27,13 +27,31 @@ abstract contract LPTokenWrapper is Ownable {
     uint256 public unstakeFeeReduceLvl2Discount;
     uint256 public unstakeFeeReduceLvl3Discount;
 
-    event unstakeFeeReduceLvl1AmountEvent(uint256 unstakeFeeReduceLvl1Amount, uint256 _unstakeFeeReduceLvl1Amount);
-    event unstakeFeeReduceLvl2AmountEvent(uint256 unstakeFeeReduceLvl2Amount, uint256 _unstakeFeeReduceLvl2Amount);
-    event unstakeFeeReduceLvl3AmountEvent(uint256 unstakeFeeReduceLvl3Amount, uint256 _unstakeFeeReduceLvl3Amount);
-    event unstakeFeeReduceLvl1DiscountEvent(uint256 unstakeFeeReduceLvl1Discount, uint256 _unstakeFeeReduceLvl1Discount);
-    event unstakeFeeReduceLvl2DiscountEvent(uint256 unstakeFeeReduceLvl2Discount, uint256 _unstakeFeeReduceLvl2Discount);
-    event unstakeFeeReduceLvl3DiscountEvent(uint256 unstakeFeeReduceLvl3Discount, uint256 _unstakeFeeReduceLvl3Discount);
-    
+    event unstakeFeeReduceLvl1AmountEvent(
+        uint256 unstakeFeeReduceLvl1Amount,
+        uint256 _unstakeFeeReduceLvl1Amount
+    );
+    event unstakeFeeReduceLvl2AmountEvent(
+        uint256 unstakeFeeReduceLvl2Amount,
+        uint256 _unstakeFeeReduceLvl2Amount
+    );
+    event unstakeFeeReduceLvl3AmountEvent(
+        uint256 unstakeFeeReduceLvl3Amount,
+        uint256 _unstakeFeeReduceLvl3Amount
+    );
+    event unstakeFeeReduceLvl1DiscountEvent(
+        uint256 unstakeFeeReduceLvl1Discount,
+        uint256 _unstakeFeeReduceLvl1Discount
+    );
+    event unstakeFeeReduceLvl2DiscountEvent(
+        uint256 unstakeFeeReduceLvl2Discount,
+        uint256 _unstakeFeeReduceLvl2Discount
+    );
+    event unstakeFeeReduceLvl3DiscountEvent(
+        uint256 unstakeFeeReduceLvl3Discount,
+        uint256 _unstakeFeeReduceLvl3Discount
+    );
+
     struct Balance {
         uint256 balance;
         uint256 boostedBalance;
@@ -76,19 +94,18 @@ abstract contract LPTokenWrapper is Ownable {
 
     // Stake funds into the pool
     function stake(uint256 amount) public virtual {
-        
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-
-        if (burnFee > 0 ) {
+        if (burnFee > 0) {
             uint256 tokenBurnBalance = amount.mul(burnFee).div(10000);
             uint256 stakedBalance = amount.sub(tokenBurnBalance);
             _balances[msg.sender].balance = _balances[msg.sender].balance.add(
-            stakedBalance
-           );
+                stakedBalance
+            );
             totalSupply = totalSupply.add(stakedBalance);
             return;
         }
-         // Increment sender's balances and total supply
+        // Increment sender's balances and total supply
+
         _balances[msg.sender].balance = _balances[msg.sender].balance.add(
             amount
         );
@@ -111,14 +128,19 @@ abstract contract LPTokenWrapper is Ownable {
 
         if (prismBalance < unstakeFeeReduceLvl1Amount) {
             userFeeReduceLvlDiscount = 0;
-        } else if (prismBalance >= unstakeFeeReduceLvl1Amount && prismBalance < unstakeFeeReduceLvl2Amount) {
+        } else if (
+            prismBalance >= unstakeFeeReduceLvl1Amount &&
+            prismBalance < unstakeFeeReduceLvl2Amount
+        ) {
             userFeeReduceLvlDiscount = unstakeFeeReduceLvl1Discount;
-        } else if (prismBalance >= unstakeFeeReduceLvl2Amount && prismBalance < unstakeFeeReduceLvl3Amount) {
+        } else if (
+            prismBalance >= unstakeFeeReduceLvl2Amount &&
+            prismBalance < unstakeFeeReduceLvl3Amount
+        ) {
             userFeeReduceLvlDiscount = unstakeFeeReduceLvl2Discount;
         } else if (prismBalance >= unstakeFeeReduceLvl3Amount) {
             userFeeReduceLvlDiscount = unstakeFeeReduceLvl3Discount;
         }
-        
 
         // Calculate fee reductions if applicable for users holding PRISM
         uint256 userDiscount = uint256(100).sub(userFeeReduceLvlDiscount);
@@ -131,18 +153,22 @@ abstract contract LPTokenWrapper is Ownable {
     }
 
     // Edits the values for the Fee Reduction on unstaking for holding PRISM
-    function editFeeReduceVariables(uint256 _unstakeFeeReduceLvl1Amount, uint256 _unstakeFeeReduceLvl2Amount,
-    uint256 _unstakeFeeReduceLvl3Amount, uint256 _unstakeFeeReduceLvl1Discount,
-    uint256 _unstakeFeeReduceLvl2Discount, uint256 _unstakeFeeReduceLvl3Discount
-    ) external onlyOwner() {
-
+    function editFeeReduceVariables(
+        uint256 _unstakeFeeReduceLvl1Amount,
+        uint256 _unstakeFeeReduceLvl2Amount,
+        uint256 _unstakeFeeReduceLvl3Amount,
+        uint256 _unstakeFeeReduceLvl1Discount,
+        uint256 _unstakeFeeReduceLvl2Discount,
+        uint256 _unstakeFeeReduceLvl3Discount
+    ) external onlyOwner {
         require(
             _unstakeFeeReduceLvl1Amount > 0 &&
-            _unstakeFeeReduceLvl2Amount > 0 &&
-            _unstakeFeeReduceLvl3Amount > 0 &&
-            _unstakeFeeReduceLvl1Discount > 0 &&
-            _unstakeFeeReduceLvl2Discount > 0 &&
-            _unstakeFeeReduceLvl3Discount > 0, "Value must be greater than 0"
+                _unstakeFeeReduceLvl2Amount > 0 &&
+                _unstakeFeeReduceLvl3Amount > 0 &&
+                _unstakeFeeReduceLvl1Discount > 0 &&
+                _unstakeFeeReduceLvl2Discount > 0 &&
+                _unstakeFeeReduceLvl3Discount > 0,
+            "Value must be greater than 0"
         );
 
         unstakeFeeReduceLvl1Amount = _unstakeFeeReduceLvl1Amount;
@@ -152,11 +178,29 @@ abstract contract LPTokenWrapper is Ownable {
         unstakeFeeReduceLvl2Discount = _unstakeFeeReduceLvl2Discount;
         unstakeFeeReduceLvl3Discount = _unstakeFeeReduceLvl3Discount;
 
-        emit unstakeFeeReduceLvl1AmountEvent(unstakeFeeReduceLvl1Amount, _unstakeFeeReduceLvl1Amount);
-        emit unstakeFeeReduceLvl2AmountEvent(unstakeFeeReduceLvl2Amount, _unstakeFeeReduceLvl2Amount);
-        emit unstakeFeeReduceLvl3AmountEvent(unstakeFeeReduceLvl3Amount, _unstakeFeeReduceLvl3Amount);
-        emit unstakeFeeReduceLvl1DiscountEvent(unstakeFeeReduceLvl1Discount, _unstakeFeeReduceLvl1Discount);
-        emit unstakeFeeReduceLvl2DiscountEvent(unstakeFeeReduceLvl2Discount, _unstakeFeeReduceLvl2Discount);
-        emit unstakeFeeReduceLvl3DiscountEvent(unstakeFeeReduceLvl3Discount, _unstakeFeeReduceLvl3Discount);
+        emit unstakeFeeReduceLvl1AmountEvent(
+            unstakeFeeReduceLvl1Amount,
+            _unstakeFeeReduceLvl1Amount
+        );
+        emit unstakeFeeReduceLvl2AmountEvent(
+            unstakeFeeReduceLvl2Amount,
+            _unstakeFeeReduceLvl2Amount
+        );
+        emit unstakeFeeReduceLvl3AmountEvent(
+            unstakeFeeReduceLvl3Amount,
+            _unstakeFeeReduceLvl3Amount
+        );
+        emit unstakeFeeReduceLvl1DiscountEvent(
+            unstakeFeeReduceLvl1Discount,
+            _unstakeFeeReduceLvl1Discount
+        );
+        emit unstakeFeeReduceLvl2DiscountEvent(
+            unstakeFeeReduceLvl2Discount,
+            _unstakeFeeReduceLvl2Discount
+        );
+        emit unstakeFeeReduceLvl3DiscountEvent(
+            unstakeFeeReduceLvl3Discount,
+            _unstakeFeeReduceLvl3Discount
+        );
     }
 }

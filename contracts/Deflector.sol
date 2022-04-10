@@ -113,6 +113,7 @@ contract Deflector is Ownable, IDeflector {
         uint256[] calldata costs,
         uint256[] calldata percentages
     ) external onlyOwner() {
+        require(pools[_pool].exists, "Not-exits");
         require(
             costs.length == percentages.length,
             "Incorrect cost & percentage length"
@@ -124,6 +125,10 @@ contract Deflector is Ownable, IDeflector {
         uint256 arraysize = costs.length;
 
         for (uint256 i = 0; i < arraysize; i++) {
+            if(i > 0) {
+                require(costs[i] > costs[i-1], "Invalid-value");
+                require(percentages[i] > percentages[i-1], "Invalid-value");
+            }
             pool.localBoosts[_token].push(
                 LocalBoostLevel(costs[i], percentages[i])
             );
