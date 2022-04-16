@@ -13,6 +13,7 @@ pragma solidity 0.6.12;
 */
 
 import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
 import "./interfaces/IDeflector.sol";
 import "./interfaces/IERC20Metadata.sol";
@@ -25,7 +26,7 @@ import "./interfaces/IERC20Metadata.sol";
  * * * NOTE: A withdrawal fee of 1.5% is included which is sent to the treasury address. Fee is reduced by holding PRISM * * *
  */
 
-contract DeflectPool is LPTokenWrapper {
+contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
 
     IDeflector public immutable deflector;
@@ -110,10 +111,10 @@ contract DeflectPool is LPTokenWrapper {
             if (address(pool.rewardTokenAddress) == address(0)) {
                 continue;
             } else {
+                updateRewardPerTokenStored(i);
                 rewardsInPool[i][account].rewards = earned(account, i);
                 rewardsInPool[i][account].userRewardPerTokenPaid = pool
                     .rewardPerTokenStored;
-                updateRewardPerTokenStored(i);
             }
         }
     }
@@ -185,7 +186,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Staking function which updates the user balances in the parent contract */
-    function stake(uint256 amount) public override {
+    function stake(uint256 amount) public override nonReentrant() {
         require(amount > 0, "Cannot stake 0");
 
         updateReward(msg.sender);
@@ -203,7 +204,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
-    function withdraw(uint256 amount, address) public override {
+    function withdraw(uint256 amount, address) public override nonReentrant() {
         require(amount > 0, "Cannot withdraw 0");
         updateReward(msg.sender);
 
@@ -238,13 +239,13 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
-    function exit() external {
+    function exit() external nonReentrant() {
         getReward();
         withdraw(balanceOf(msg.sender), msg.sender);
     }
 
     /** @dev Sends out the reward tokens to the user */
-    function getReward() public {
+    function getReward() public nonReentrant() {
         updateReward(msg.sender);
         uint256 arraysize = poolInfo.length;
 
@@ -268,7 +269,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Sends out the reward tokens to the user, while also re-staking reward tokens if it is the same as the staking tokens */
-    function getRewardCompound() public {
+    function getRewardCompound() public nonReentrant() {
         updateReward(msg.sender);
 
         // loop through all the reward pools for a user
@@ -296,7 +297,7 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Purchase a multiplier level, same level cannot be purchased twice */
-    function purchase(address _token, uint256 _newLevel) external {
+    function purchase(address _token, uint256 _newLevel) external nonReentrant() {
         updateReward(msg.sender);
 
         // Calculates cost, ensures it is a new level too
@@ -332,20 +333,20 @@ contract DeflectPool is LPTokenWrapper {
     }
 
     /** @dev Sync after minting more prism */
-    function sync() external {
-        updateReward(msg.sender);
+    // function sync() external {
+    //     updateReward(msg.sender);
 
-        uint256 boostedBalance = deflector.calculateBoostedBalance(
-            msg.sender,
-            _balances[msg.sender].balance
-        );
-        require(
-            boostedBalance > _balances[msg.sender].boostedBalance,
-            "Invalid sync invocation"
-        );
-        // Adjust new level
-        adjustBoostedBalance(boostedBalance);
-    }
+    //     uint256 boostedBalance = deflector.calculateBoostedBalance(
+    //         msg.sender,
+    //         _balances[msg.sender].balance
+    //     );
+    //     require(
+    //         boostedBalance > _balances[msg.sender].boostedBalance,
+    //         "Invalid sync invocation"
+    //     );
+    //     // Adjust new level
+    //     adjustBoostedBalance(boostedBalance);
+    // }
 
     /** @dev Returns the multiplier for user */
     function getUserMultiplier() external view returns (uint256) {
@@ -502,17 +503,20 @@ contract DeflectPool is LPTokenWrapper {
         pool.periodFinish = block.timestamp;
     }
 
-    /** @dev Callable only after the pool has started and the pools reward distribution period has finished */
-    function emergencyWithdraw(uint256 _pid) external {
-        PoolInfo storage pool = poolInfo[_pid];
+    /** @dev Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders */
+    function emergencyWithdraw(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyOwner
+    {
         require(
-            block.timestamp >= pool.periodFinish.add(12 hours),
-            "Cannot emergency withdraw before period finishes or pool has started"
+            tokenAddress != address(stakingToken),
+            "Cannot withdraw staking token"
         );
-        uint256 fullWithdrawal = pool.rewardTokenAddress.balanceOf(msg.sender);
-        require(fullWithdrawal > 0, "emergencyWithdraw: Cannot withdraw 0");
-        super.withdraw(fullWithdrawal, msg.sender);
-        emit Withdrawn(msg.sender, fullWithdrawal);
+        require(
+            addedRewardTokens[tokenAddress] == false,
+            "Cannot withdraw reward token"
+        );
+        IERC20(tokenAddress).safeTransfer(msg.sender, tokenAmount);
     }
 
     /** @dev Sets a new treasury address */

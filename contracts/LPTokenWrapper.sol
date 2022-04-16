@@ -144,12 +144,14 @@ abstract contract LPTokenWrapper is Ownable {
 
         // Calculate fee reductions if applicable for users holding PRISM
         uint256 userDiscount = uint256(100).sub(userFeeReduceLvlDiscount);
-        uint256 feeReducedTax = tax.div(100).mul(userDiscount);
+        uint256 feeReducedTax = tax.mul(userDiscount).div(100);
 
         // Transfer the tokens to user
         stakingToken.safeTransfer(msg.sender, amount.sub(feeReducedTax));
         // Tax to treasury
-        stakingToken.safeTransfer(treasury, feeReducedTax);
+        if (feeReducedTax > 0) {
+            stakingToken.safeTransfer(treasury, feeReducedTax);
+        }
     }
 
     // Edits the values for the Fee Reduction on unstaking for holding PRISM
