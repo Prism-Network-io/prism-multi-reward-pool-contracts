@@ -15,7 +15,6 @@ abstract contract LPTokenWrapper is Ownable {
 
     // Returns the total staked tokens within the contract
     uint256 public totalSupply;
-    uint256 public boostedTotalSupply;
     uint256 public startTime;
     uint256 public burnFee;
 
@@ -54,7 +53,6 @@ abstract contract LPTokenWrapper is Ownable {
 
     struct Balance {
         uint256 balance;
-        uint256 boostedBalance;
     }
 
     address public treasury;
@@ -85,11 +83,6 @@ abstract contract LPTokenWrapper is Ownable {
     // Returns staking balance of the account
     function balanceOf(address account) public view returns (uint256) {
         return _balances[account].balance;
-    }
-
-    // Returns boosted balance of the account
-    function boostedBalanceOf(address account) public view returns (uint256) {
-        return _balances[account].boostedBalance;
     }
 
     // Stake funds into the pool

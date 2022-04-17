@@ -15,21 +15,18 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
-import "./interfaces/IDeflector.sol";
 import "./interfaces/IERC20Metadata.sol";
 
 /**
- * @title DeflectPool
- * @author DEFLECT PROTOCOL
+ * @title EccMultiRewardPool
+ * @author Empire Capital
  * @dev This contract is a time-based yield farming pool with effective-staking multiplier mechanics.
  *
  * * * NOTE: A withdrawal fee of 1.5% is included which is sent to the treasury address. Fee is reduced by holding PRISM * * *
  */
 
-contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
+contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
-
-    IDeflector public immutable deflector;
     uint256 public immutable stakingTokenMultiplier;
     uint256 public immutable deployedTime;
     address public immutable devFund;
@@ -62,7 +59,6 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         address rewardToken,
         uint256 rewardAmount
     );
-    event Boost(address _token, uint256 level);
     event RewardPoolAdded(
         uint256 rewardPoolID,
         address rewardTokenAddress,
@@ -78,7 +74,6 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     // Set the staking token, addresses, various fee variables and the prism fee reduction level amounts
     constructor(
         address _stakingToken,
-        address _deflector,
         address _treasury,
         address _devFund,
         uint256 _devFee,
@@ -90,12 +85,10 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     {
         require(
             _stakingToken != address(0) &&
-                _deflector != address(0) &&
                 _treasury != address(0) &&
                 _devFund != address(0),
             "!constructor"
         );
-        deflector = IDeflector(_deflector);
         stakingTokenMultiplier =
             10**uint256(IERC20Metadata(_stakingToken).decimals());
         deployedTime = block.timestamp;
@@ -151,8 +144,6 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
             return pool.rewardPerTokenStored;
         }
 
-        // Effective total supply takes into account all the multipliers bought by userbase.
-        uint256 effectiveTotalSupply = totalSupply.add(boostedTotalSupply);
         // The returrn value is time-based on last time the contract had rewards active multipliede by the reward-rate.
         // It's evened out with a division of bonus effective supply.
         return
@@ -161,7 +152,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
                     .sub(pool.lastUpdateTime)
                     .mul(pool.rewardRate)
                     .mul(stakingTokenMultiplier)
-                    .div(effectiveTotalSupply)
+                    .div(totalSupply)
             );
     }
 
@@ -171,81 +162,42 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
         view
         returns (uint256)
     {
-        uint256 effectiveBalance = _balances[account].balance.add(
-            _balances[account].boostedBalance
-        );
         uint256 reward = rewardsInPool[_pid][msg.sender].rewards;
         uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender]
             .userRewardPerTokenPaid;
 
         return
-            effectiveBalance
+            _balances[account]
+                .balance
                 .mul(rewardPerToken(_pid).sub(rewardPerTokenPaid))
                 .div(stakingTokenMultiplier)
                 .add(reward);
     }
 
     /** @dev Staking function which updates the user balances in the parent contract */
-    function stake(uint256 amount) public override nonReentrant() {
+    function stake(uint256 amount) public override nonReentrant {
         require(amount > 0, "Cannot stake 0");
-
         updateReward(msg.sender);
-
-        // Call the parent to adjust the balances.
         super.stake(amount);
-
-        // Adjust the bonus effective stake according to the multiplier.
-        uint256 boostedBalance = deflector.calculateBoostedBalance(
-            msg.sender,
-            _balances[msg.sender].balance
-        );
-        adjustBoostedBalance(boostedBalance);
         emit Staked(msg.sender, amount);
     }
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
-    function withdraw(uint256 amount, address) public override nonReentrant() {
+    function withdraw(uint256 amount, address) public override nonReentrant {
         require(amount > 0, "Cannot withdraw 0");
         updateReward(msg.sender);
-
-        // Adjust regular balances
         super.withdraw(amount, msg.sender);
-
-        // And the bonus balances
-        uint256 boostedBalance = deflector.calculateBoostedBalance(
-            msg.sender,
-            _balances[msg.sender].balance
-        );
-        adjustBoostedBalance(boostedBalance);
         emit Withdrawn(msg.sender, amount);
     }
 
-    /** @dev Adjust the bonus effective stakee for user and whole userbase */
-    function adjustBoostedBalance(uint256 _boostedBalance) private {
-        Balance storage balances = _balances[msg.sender];
-        uint256 previousBoostedBalance = balances.boostedBalance;
-        if (_boostedBalance < previousBoostedBalance) {
-            uint256 diffBalancesAccounting = previousBoostedBalance.sub(
-                _boostedBalance
-            );
-            boostedTotalSupply = boostedTotalSupply.sub(diffBalancesAccounting);
-        } else if (_boostedBalance > previousBoostedBalance) {
-            uint256 diffBalancesAccounting = _boostedBalance.sub(
-                previousBoostedBalance
-            );
-            boostedTotalSupply = boostedTotalSupply.add(diffBalancesAccounting);
-        }
-        balances.boostedBalance = _boostedBalance;
-    }
-
     /** @dev Ease-of-access function for user to remove assets from the pool */
-    function exit() external nonReentrant() {
+    function exit() external nonReentrant {
         getReward();
         withdraw(balanceOf(msg.sender), msg.sender);
     }
 
     /** @dev Sends out the reward tokens to the user */
-    function getReward() public nonReentrant() {
+    function getReward() public nonReentrant {
         updateReward(msg.sender);
         uint256 arraysize = poolInfo.length;
 
@@ -269,7 +221,7 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
     }
 
     /** @dev Sends out the reward tokens to the user, while also re-staking reward tokens if it is the same as the staking tokens */
-    function getRewardCompound() public nonReentrant() {
+    function getRewardCompound() public nonReentrant {
         updateReward(msg.sender);
 
         // loop through all the reward pools for a user
@@ -294,80 +246,6 @@ contract DeflectPool is LPTokenWrapper, ReentrancyGuard {
                 }
             }
         }
-    }
-
-    /** @dev Purchase a multiplier level, same level cannot be purchased twice */
-    function purchase(address _token, uint256 _newLevel) external nonReentrant() {
-        updateReward(msg.sender);
-
-        // Calculates cost, ensures it is a new level too
-        uint256 cost = deflector.calculateCost(msg.sender, _token, _newLevel);
-        require(cost > 0, "cost cannot be 0");
-
-        // Update level in multiplier contract
-        uint256 newBoostedBalance = deflector.updateLevel(
-            msg.sender,
-            _token,
-            _newLevel,
-            _balances[msg.sender].balance
-        );
-
-        // Adjust new level
-        adjustBoostedBalance(newBoostedBalance);
-
-        emit Boost(_token, _newLevel);
-
-        uint256 devPortion = cost.mul(25) / 100;
-
-        // Transfer the bonus cost into the treasury and dev fund.
-        IERC20Metadata(_token).safeTransferFrom(
-            msg.sender,
-            devFund,
-            devPortion
-        );
-        IERC20Metadata(_token).safeTransferFrom(
-            msg.sender,
-            treasury,
-            cost.sub(devPortion)
-        );
-    }
-
-    /** @dev Sync after minting more prism */
-    // function sync() external {
-    //     updateReward(msg.sender);
-
-    //     uint256 boostedBalance = deflector.calculateBoostedBalance(
-    //         msg.sender,
-    //         _balances[msg.sender].balance
-    //     );
-    //     require(
-    //         boostedBalance > _balances[msg.sender].boostedBalance,
-    //         "Invalid sync invocation"
-    //     );
-    //     // Adjust new level
-    //     adjustBoostedBalance(boostedBalance);
-    // }
-
-    /** @dev Returns the multiplier for user */
-    function getUserMultiplier() external view returns (uint256) {
-        // And the bonus balances
-        uint256 boostedBalance = deflector.calculateBoostedBalance(
-            msg.sender,
-            _balances[msg.sender].balance
-        );
-
-        if (boostedBalance == 0) return 0;
-
-        return (boostedBalance * 100) / _balances[msg.sender].balance;
-    }
-
-    /** @dev Returns the amount of tokens needed to purchase the boost level input */
-    function getLevelCost(address _token, uint256 _level)
-        external
-        view
-        returns (uint256)
-    {
-        return deflector.calculateCost(msg.sender, _token, _level);
     }
 
     /** @dev Adds a new reward pool with specified duration */

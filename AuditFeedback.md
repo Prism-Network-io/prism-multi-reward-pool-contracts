@@ -12,3 +12,5 @@
 12. LPT-02 | Not Burnt: Its not correct, burnFee here reppresent for token that has burn amount when transfer, for example transfer 10 burn 1, so staked balance is only 9. That burn based on token code, not staking contract code.
 12. LPT-03 | Potential Failure Of Transferring Amount Zero: Fixed
 13. LPT-04 | Incremental Check Of Parameters and LPT-05 | Check Effect Interaction Pattern Violated: We leave it as it 
+
+** Important node: We removed Deflector contract, that mean we dont have any boost features for now, so there will be no boosted balance, no boosted supply. 
