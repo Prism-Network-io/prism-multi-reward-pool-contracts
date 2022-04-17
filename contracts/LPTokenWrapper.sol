@@ -9,7 +9,6 @@ abstract contract LPTokenWrapper is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable prism;
     IERC20 public immutable stakingToken;
     uint256 public immutable devFee;
 
@@ -17,39 +16,6 @@ abstract contract LPTokenWrapper is Ownable {
     uint256 public totalSupply;
     uint256 public startTime;
     uint256 public burnFee;
-
-    // Variables for determing the reduction of unstaking fees based on holding PRISM
-    uint256 public unstakeFeeReduceLvl1Amount;
-    uint256 public unstakeFeeReduceLvl2Amount;
-    uint256 public unstakeFeeReduceLvl3Amount;
-    uint256 public unstakeFeeReduceLvl1Discount;
-    uint256 public unstakeFeeReduceLvl2Discount;
-    uint256 public unstakeFeeReduceLvl3Discount;
-
-    event unstakeFeeReduceLvl1AmountEvent(
-        uint256 unstakeFeeReduceLvl1Amount,
-        uint256 _unstakeFeeReduceLvl1Amount
-    );
-    event unstakeFeeReduceLvl2AmountEvent(
-        uint256 unstakeFeeReduceLvl2Amount,
-        uint256 _unstakeFeeReduceLvl2Amount
-    );
-    event unstakeFeeReduceLvl3AmountEvent(
-        uint256 unstakeFeeReduceLvl3Amount,
-        uint256 _unstakeFeeReduceLvl3Amount
-    );
-    event unstakeFeeReduceLvl1DiscountEvent(
-        uint256 unstakeFeeReduceLvl1Discount,
-        uint256 _unstakeFeeReduceLvl1Discount
-    );
-    event unstakeFeeReduceLvl2DiscountEvent(
-        uint256 unstakeFeeReduceLvl2Discount,
-        uint256 _unstakeFeeReduceLvl2Discount
-    );
-    event unstakeFeeReduceLvl3DiscountEvent(
-        uint256 unstakeFeeReduceLvl3Discount,
-        uint256 _unstakeFeeReduceLvl3Discount
-    );
 
     struct Balance {
         uint256 balance;
@@ -63,21 +29,12 @@ abstract contract LPTokenWrapper is Ownable {
         uint256 _devFee,
         address _stakingToken,
         address _treasury,
-        uint256 _burnFee,
-        address _prism
+        uint256 _burnFee
     ) public {
         devFee = _devFee;
         stakingToken = IERC20(_stakingToken);
         treasury = _treasury;
         burnFee = _burnFee;
-        prism = IERC20(_prism);
-
-        unstakeFeeReduceLvl1Amount = 25_000_000_000_000_000_000;
-        unstakeFeeReduceLvl2Amount = 50_000_000_000_000_000_000;
-        unstakeFeeReduceLvl3Amount = 100_000_000_000_000_000_000;
-        unstakeFeeReduceLvl1Discount = 25;
-        unstakeFeeReduceLvl2Discount = 50;
-        unstakeFeeReduceLvl3Discount = 100;
     }
 
     // Returns staking balance of the account
@@ -115,87 +72,9 @@ abstract contract LPTokenWrapper is Ownable {
         // Calculate the withdraw tax (it's 1.5% of the amount)
         uint256 tax = amount.mul(devFee).div(1000);
 
-        // Apply any Fee Reduction from holding PRISM
-        uint256 userFeeReduceLvlDiscount;
-        uint256 prismBalance = prism.balanceOf(user);
-
-        if (prismBalance < unstakeFeeReduceLvl1Amount) {
-            userFeeReduceLvlDiscount = 0;
-        } else if (
-            prismBalance >= unstakeFeeReduceLvl1Amount &&
-            prismBalance < unstakeFeeReduceLvl2Amount
-        ) {
-            userFeeReduceLvlDiscount = unstakeFeeReduceLvl1Discount;
-        } else if (
-            prismBalance >= unstakeFeeReduceLvl2Amount &&
-            prismBalance < unstakeFeeReduceLvl3Amount
-        ) {
-            userFeeReduceLvlDiscount = unstakeFeeReduceLvl2Discount;
-        } else if (prismBalance >= unstakeFeeReduceLvl3Amount) {
-            userFeeReduceLvlDiscount = unstakeFeeReduceLvl3Discount;
-        }
-
-        // Calculate fee reductions if applicable for users holding PRISM
-        uint256 userDiscount = uint256(100).sub(userFeeReduceLvlDiscount);
-        uint256 feeReducedTax = tax.mul(userDiscount).div(100);
-
         // Transfer the tokens to user
-        stakingToken.safeTransfer(msg.sender, amount.sub(feeReducedTax));
+        stakingToken.safeTransfer(msg.sender, amount - tax);
         // Tax to treasury
-        if (feeReducedTax > 0) {
-            stakingToken.safeTransfer(treasury, feeReducedTax);
-        }
-    }
-
-    // Edits the values for the Fee Reduction on unstaking for holding PRISM
-    function editFeeReduceVariables(
-        uint256 _unstakeFeeReduceLvl1Amount,
-        uint256 _unstakeFeeReduceLvl2Amount,
-        uint256 _unstakeFeeReduceLvl3Amount,
-        uint256 _unstakeFeeReduceLvl1Discount,
-        uint256 _unstakeFeeReduceLvl2Discount,
-        uint256 _unstakeFeeReduceLvl3Discount
-    ) external onlyOwner {
-        require(
-            _unstakeFeeReduceLvl1Amount > 0 &&
-                _unstakeFeeReduceLvl2Amount > 0 &&
-                _unstakeFeeReduceLvl3Amount > 0 &&
-                _unstakeFeeReduceLvl1Discount > 0 &&
-                _unstakeFeeReduceLvl2Discount > 0 &&
-                _unstakeFeeReduceLvl3Discount > 0,
-            "Value must be greater than 0"
-        );
-
-        unstakeFeeReduceLvl1Amount = _unstakeFeeReduceLvl1Amount;
-        unstakeFeeReduceLvl2Amount = _unstakeFeeReduceLvl2Amount;
-        unstakeFeeReduceLvl3Amount = _unstakeFeeReduceLvl3Amount;
-        unstakeFeeReduceLvl1Discount = _unstakeFeeReduceLvl1Discount;
-        unstakeFeeReduceLvl2Discount = _unstakeFeeReduceLvl2Discount;
-        unstakeFeeReduceLvl3Discount = _unstakeFeeReduceLvl3Discount;
-
-        emit unstakeFeeReduceLvl1AmountEvent(
-            unstakeFeeReduceLvl1Amount,
-            _unstakeFeeReduceLvl1Amount
-        );
-        emit unstakeFeeReduceLvl2AmountEvent(
-            unstakeFeeReduceLvl2Amount,
-            _unstakeFeeReduceLvl2Amount
-        );
-        emit unstakeFeeReduceLvl3AmountEvent(
-            unstakeFeeReduceLvl3Amount,
-            _unstakeFeeReduceLvl3Amount
-        );
-        emit unstakeFeeReduceLvl1DiscountEvent(
-            unstakeFeeReduceLvl1Discount,
-            _unstakeFeeReduceLvl1Discount
-        );
-        emit unstakeFeeReduceLvl2DiscountEvent(
-            unstakeFeeReduceLvl2Discount,
-            _unstakeFeeReduceLvl2Discount
-        );
-        emit unstakeFeeReduceLvl3DiscountEvent(
-            unstakeFeeReduceLvl3Discount,
-            _unstakeFeeReduceLvl3Discount
-        );
+        stakingToken.safeTransfer(treasury, tax);
     }
 }

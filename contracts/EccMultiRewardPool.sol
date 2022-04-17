@@ -1,17 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-/*
-    ▓█████▄ ▓█████   ████ ▒██▓    ▓█████  ▄████▄  ▄▄▄█████▓   ██▓███   ▒█████   ▒█████   ██▓
-    ▒██▀ ██▌▓█   ▀  ▓██   ▒▓██▒    ▓█   ▀ ▒██▀ ▀█  ▓  ██▒ ▓▒   ▓██░  ██▒▒██▒  ██▒▒██▒  ██▒ ▓██▒
-    ░██   █▌▒███    ▒████ ░▒██░    ▒███   ▒▓█    ▄    ██░ ▒    ▓██░ ██▓▒▒██   ██▒▒██░  ██▒ ▒██░
-    ░▓█▄   ▌▒▓█  ▄ ░ ▓█▒  ░▒██░    ▒▓█  ▄ ▒▓▓▄ ▄██▒░  ██ ░    ▒██▄█▓▒ ▒▒██   ██░▒██   ██░ ▒██░
-    ░▒████▓ ░▒████▒░ ▒█░   ░██████▒░▒████▒▒ ▓███▀ ░  ▒██▒     ▒██▒ ░  ░░ ████▓▒░░ ████▓▒░░██████▒
-     ▒▒▓  ▒ ░░ ▒░ ░ ▒ ░   ░ ▒░▓  ░░░ ▒░ ░░ ░▒ ▒  ░  ▒ ░░        ▒▓▒░ ░  ░░ ▒░▒░▒░ ░ ▒░▒░▒░ ░ ▒░▓  ░
-     ░ ▒  ▒  ░ ░  ░ ░     ░ ░ ▒  ░ ░ ░  ░  ░  ▒       ░          ░▒ ░       ░ ▒ ▒░   ░ ▒ ▒░ ░ ░ ▒  ░
-     ░ ░  ░    ░    ░ ░     ░ ░      ░   ░             ░             ░░         ░ ░ ░ ▒  ░ ░ ░ ▒
-*/
-
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
@@ -20,9 +9,7 @@ import "./interfaces/IERC20Metadata.sol";
 /**
  * @title EccMultiRewardPool
  * @author Empire Capital
- * @dev This contract is a time-based yield farming pool with effective-staking multiplier mechanics.
- *
- * * * NOTE: A withdrawal fee of 1.5% is included which is sent to the treasury address. Fee is reduced by holding PRISM * * *
+ * @dev Stake ECC token to earn multi rewards
  */
 
 contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
@@ -77,11 +64,10 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         address _treasury,
         address _devFund,
         uint256 _devFee,
-        uint256 _burnFee,
-        address _prism
+        uint256 _burnFee
     )
         public
-        LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee, _prism)
+        LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee)
     {
         require(
             _stakingToken != address(0) &&
