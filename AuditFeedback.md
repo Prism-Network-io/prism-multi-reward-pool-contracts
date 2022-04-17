@@ -13,4 +13,4 @@
 12. LPT-03 | Potential Failure Of Transferring Amount Zero: Fixed
 13. LPT-04 | Incremental Check Of Parameters and LPT-05 | Check Effect Interaction Pattern Violated: We leave it as it 
 
-** Important node: We removed Deflector contract, that mean we dont have any boost features for now, so there will be no boosted balance, no boosted supply. 
+** Important node: We removed Deflector contract, that mean we dont have any boost features for now, so there will be no boosted balance, no boosted supply, no prism and no discount tax level.
