@@ -206,34 +206,6 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         }
     }
 
-    /** @dev Sends out the reward tokens to the user, while also re-staking reward tokens if it is the same as the staking tokens */
-    function getRewardCompound() public nonReentrant {
-        updateReward(msg.sender);
-
-        // loop through all the reward pools for a user
-        for (uint256 i = 0; i < poolInfo.length; i++) {
-            PoolInfo storage pool = poolInfo[i];
-            uint256 reward = rewardsInPool[i][msg.sender].rewards;
-
-            if (address(pool.rewardTokenAddress) == address(0) || reward == 0) {
-                continue;
-            } else {
-                rewardsInPool[i][msg.sender].rewards = 0;
-
-                if (address(pool.rewardTokenAddress) == address(stakingToken)) {
-                    stake(reward);
-                } else {
-                    pool.rewardTokenAddress.safeTransfer(msg.sender, reward);
-                    emit RewardPaid(
-                        msg.sender,
-                        address(pool.rewardTokenAddress),
-                        reward
-                    );
-                }
-            }
-        }
-    }
-
     /** @dev Adds a new reward pool with specified duration */
     function addRewardPool(IERC20Metadata _rewardToken, uint256 _duration)
         public
