@@ -14,3 +14,8 @@
 13. LPT-04 | Incremental Check Of Parameters and LPT-05 | Check Effect Interaction Pattern Violated: We leave it as it 
 
 ** Important node: We removed Deflector contract, that mean we dont have any boost features for now, so there will be no boosted balance, no boosted supply, no prism and no discount tax level.
+
+
+Update April 29:
+1. in EccMultiRewardPool, the function exit() should not use modifier nonReentrant. -> Any reason why we should not use this modifier to prevent attack ?
+2. For finding “Wrong Way To Compound”: We removed that function already
