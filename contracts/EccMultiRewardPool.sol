@@ -177,7 +177,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
-    function exit() external nonReentrant {
+    function exit() external {
         getReward();
         withdraw(balanceOf(msg.sender), msg.sender);
     }
