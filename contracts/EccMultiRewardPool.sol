@@ -65,10 +65,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         address _devFund,
         uint256 _devFee,
         uint256 _burnFee
-    )
-        public
-        LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee)
-    {
+    ) public LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee) {
         require(
             _stakingToken != address(0) &&
                 _treasury != address(0) &&
@@ -169,17 +166,17 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     }
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
-    function withdraw(uint256 amount, address) public override nonReentrant {
+    function withdraw(uint256 amount) public override nonReentrant {
         require(amount > 0, "Cannot withdraw 0");
         updateReward(msg.sender);
-        super.withdraw(amount, msg.sender);
+        super.withdraw(amount);
         emit Withdrawn(msg.sender, amount);
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
     function exit() external {
         getReward();
-        withdraw(balanceOf(msg.sender), msg.sender);
+        withdraw(balanceOf(msg.sender));
     }
 
     /** @dev Sends out the reward tokens to the user */
@@ -290,6 +287,9 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             "Cannot eject before period finishes or pool has started"
         );
         uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
+        if (address(pool.rewardTokenAddress) == address(stakingToken)) {
+            currBalance = currBalance.sub(totalSupply);
+        }
         pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
     }
 
@@ -309,6 +309,9 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
                 uint256 currBalance = pool.rewardTokenAddress.balanceOf(
                     address(this)
                 );
+                if (address(pool.rewardTokenAddress) == address(stakingToken)) {
+                    currBalance = currBalance.sub(totalSupply);
+                }
                 pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
             }
         }
