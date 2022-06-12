@@ -166,18 +166,29 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         updateReward(msg.sender);
         super.stake(amount);
         emit Staked(msg.sender, amount);
+
+        //create lock for staked event
+        //lockStakedTokens(amount, (45 days))
+
     }
+
+    
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
     function withdraw(uint256 amount, address) public override nonReentrant {
         require(amount > 0, "Cannot withdraw 0");
+        //check (amount < balance - lockStakedTokensTotal(msg.sender) >= 0)
+
         updateReward(msg.sender);
         super.withdraw(amount, msg.sender);
         emit Withdrawn(msg.sender, amount);
+
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
     function exit() external nonReentrant {
+        //check (amount < balance - lockStakedTokensTotal(msg.sender) >= 0)
+
         getReward();
         withdraw(balanceOf(msg.sender), msg.sender);
     }
