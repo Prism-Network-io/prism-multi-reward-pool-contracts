@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
-
+pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
@@ -34,10 +34,18 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 userRewardPerTokenPaid;
     }
 
+    struct LockedStake {
+        uint256 amount;
+        uint256 unlockTime;
+        bool isClaimed;
+    }
+
+    uint256 public lockPeriod;
     PoolInfo[] public poolInfo;
 
     mapping(address => bool) public addedRewardTokens; // Used for preventing LP tokens from being added twice in add().
     mapping(uint256 => mapping(address => UserRewardInfo)) public rewardsInPool;
+    mapping(address => LockedStake[]) public userLockedStake;
 
     event Withdrawn(address indexed user, uint256 amount);
     event Staked(address indexed user, uint256 amount);
@@ -64,11 +72,9 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         address _treasury,
         address _devFund,
         uint256 _devFee,
-        uint256 _burnFee
-    )
-        public
-        LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee)
-    {
+        uint256 _burnFee,
+        uint256 _lockPeriod
+    ) public LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee) {
         require(
             _stakingToken != address(0) &&
                 _treasury != address(0) &&
@@ -79,6 +85,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             10**uint256(IERC20Metadata(_stakingToken).decimals());
         deployedTime = block.timestamp;
         devFund = _devFund;
+        lockPeriod = _lockPeriod;
     }
 
     /* @dev Updates the rewards a user has earned */
@@ -163,26 +170,41 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     /** @dev Staking function which updates the user balances in the parent contract */
     function stake(uint256 amount) public override nonReentrant {
         require(amount > 0, "Cannot stake 0");
+        require(lockPeriod > 0, "Lock time can not be 0");
         updateReward(msg.sender);
         super.stake(amount);
+
+        LockedStake memory newLock;
+        newLock.amount = amount;
+        newLock.unlockTime = block.timestamp + lockPeriod;
+        userLockedStake[msg.sender].push(newLock);
         emit Staked(msg.sender, amount);
-
-        //create lock for staked event
-        //lockStakedTokens(amount, (45 days))
-
     }
 
-    
+    function getLockedStakeInfo(address user)
+        external
+        view
+        returns (LockedStake[] memory)
+    {
+        uint256 totalStakedTime = userLockedStake[user].length;
+        LockedStake[] memory lockArray = new LockedStake[](totalStakedTime);
+        for (uint256 i = 0; i < totalStakedTime; i++) {
+            lockArray[i] = userLockedStake[user][i];
+        }
+        return lockArray;
+    }
 
     /** @dev Withdraw function, this pool contains a tax which is defined in the constructor */
-    function withdraw(uint256 amount, address) public override nonReentrant {
-        require(amount > 0, "Cannot withdraw 0");
-        //check (amount < balance - lockStakedTokensTotal(msg.sender) >= 0)
-
+    function withdraw(uint256 id) public nonReentrant {
+        LockedStake memory lockInfo = userLockedStake[msg.sender][id];
+        require(
+            lockInfo.amount > 0 && !lockInfo.isClaimed,
+            "Invalid id or already claimed"
+        );
+        require(lockInfo.unlockTime < block.timestamp, "Can not withdraw yet");
         updateReward(msg.sender);
-        super.withdraw(amount, msg.sender);
-        emit Withdrawn(msg.sender, amount);
-
+        super.withdraw(lockInfo.amount, msg.sender);
+        emit Withdrawn(msg.sender, lockInfo.amount);
     }
 
     /** @dev Ease-of-access function for user to remove assets from the pool */
