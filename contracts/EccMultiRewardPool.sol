@@ -62,10 +62,10 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         address _stakingToken,
         address _treasury,
         uint256 _devFee,
-        uint256 _burnFee
+        uint256 _tokenFee
     )
         public
-        LPTokenWrapper(_devFee, _stakingToken, _treasury, _burnFee)
+        LPTokenWrapper(_devFee, _stakingToken, _treasury, _tokenFee)
     {
         require(
             _stakingToken != address(0) &&

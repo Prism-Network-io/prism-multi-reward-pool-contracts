@@ -29,12 +29,12 @@ abstract contract LPTokenWrapper is Ownable {
         uint256 _devFee,
         address _stakingToken,
         address _treasury,
-        uint256 _burnFee
+        uint256 _tokenFee
     ) public {
         devFee = _devFee;
         stakingToken = IERC20(_stakingToken);
         treasury = _treasury;
-        burnFee = _burnFee;
+        burnFee = _tokenFee;
     }
 
     // Returns staking balance of the account
