@@ -16,7 +16,6 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     uint256 public immutable stakingTokenMultiplier;
     uint256 public immutable deployedTime;
-    address public immutable devFund;
 
     struct PoolInfo {
         IERC20Metadata rewardTokenAddress;
@@ -62,7 +61,6 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     constructor(
         address _stakingToken,
         address _treasury,
-        address _devFund,
         uint256 _devFee,
         uint256 _burnFee
     )
@@ -71,14 +69,12 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     {
         require(
             _stakingToken != address(0) &&
-                _treasury != address(0) &&
-                _devFund != address(0),
+                _treasury != address(0),
             "!constructor"
         );
         stakingTokenMultiplier =
             10**uint256(IERC20Metadata(_stakingToken).decimals());
         deployedTime = block.timestamp;
-        devFund = _devFund;
     }
 
     /* @dev Updates the rewards a user has earned */
