@@ -341,16 +341,8 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.duration = _duration;
 
         // Rewardrate must stay at a constant since it's used by end-users claiming rewards after the reward period has finished.
-        if (block.timestamp >= pool.periodFinish) {
-            pool.rewardRate = _reward.div(pool.duration);
-        } else {
-            // Remaining time for the pool
-            uint256 remainingTime = pool.periodFinish.sub(block.timestamp);
-            // And the rewards
-            uint256 rewardsRemaining = remainingTime.mul(pool.rewardRate);
-            // Set the current rate
-            pool.rewardRate = _reward.add(rewardsRemaining).div(pool.duration);
-        }
+        // Set the current rate
+        pool.rewardRate = _reward.div(pool.duration);
 
         // Set the last updated time
         pool.lastUpdateTime = block.timestamp;
