@@ -230,7 +230,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         }
     }
 
-    /** @dev Adds a new reward pool with specified duration */
+    /** @dev Adds a new reward pool */
     function addRewardPool(IERC20Metadata _rewardToken)
         public
         onlyOwner
@@ -262,20 +262,23 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         emit RewardPoolAdded(_rewardTokenID, address(_rewardToken));
     }
 
-    /** @dev Called to start the pool. Owner must have already sent rewards to the contract. Reward amount is defined in the input. */
-    function notifyRewardAmount(uint256 _pid, uint256 _reward, uint256 _duration)
+    /** @dev Called to start the pool. Reward amount + duration is defined in the input. */
+    function startRewardPool(uint256 _pid, uint256 _reward, uint256 _duration)
         external
         onlyOwner
     {
         require(_reward > 0, "Can not add zero balance");
         require(_duration > 0, "Must define valid duration length");
 
+        // Transfer reward token from caller to contract
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 rewardAmount = _reward*10**uint256(IERC20Metadata(pool.rewardTokenAddress).decimals());
         pool.rewardTokenAddress.safeTransferFrom(
             msg.sender,
             address(this),
-            _reward
+            rewardAmount
         );
+
         // Update reward values
         updateRewardPerTokenStored(_pid);
 
