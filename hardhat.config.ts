@@ -27,8 +27,6 @@ const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE
 const config: HardhatUserConfig = {
   solidity: "0.6.12",
   networks: {
-    hardhat: {
-    },
     goerli: {
       url: process.env.GOERLI_URL || "",
       accounts: deployerKey,

@@ -10,7 +10,7 @@ abstract contract LPTokenWrapper is Ownable {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable stakingToken;
-    uint256 public immutable devFee;
+    uint256 public immutable devFee;        // 10 = 1%
 
     // Returns the total staked tokens within the contract
     uint256 public totalSupply;
