@@ -47,13 +47,13 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     );
     event RewardPoolAdded(
         uint256 rewardPoolID,
-        address rewardTokenAddress,
-        uint256 rewardDuration
+        address rewardTokenAddress
     );
     event RewardPoolStarted(
         uint256 rewardPoolID,
         address rewardTokenAddress,
         uint256 rewardAmount,
+        uint256 rewardDuration,
         uint256 rewardPeriodFinish
     );
 
@@ -231,12 +231,11 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     }
 
     /** @dev Adds a new reward pool with specified duration */
-    function addRewardPool(IERC20Metadata _rewardToken, uint256 _duration)
+    function addRewardPool(IERC20Metadata _rewardToken)
         public
         onlyOwner
     {
         require(address(_rewardToken) != address(0), "Cannot add burn address");
-        require(_duration != 0, "Must define valid duration length");
         require(
             !addedRewardTokens[address(_rewardToken)],
             "Token already added"
@@ -249,7 +248,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             PoolInfo({
                 rewardTokenAddress: _rewardToken,
                 rewardPoolID: _rewardTokenID,
-                duration: _duration,
+                duration: 0,
                 periodFinish: 0,
                 startTime: 0,
                 lastUpdateTime: 0,
@@ -260,15 +259,16 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         addedRewardTokens[address(_rewardToken)] = true;
 
-        emit RewardPoolAdded(_rewardTokenID, address(_rewardToken), _duration);
+        emit RewardPoolAdded(_rewardTokenID, address(_rewardToken));
     }
 
     /** @dev Called to start the pool. Owner must have already sent rewards to the contract. Reward amount is defined in the input. */
-    function notifyRewardAmount(uint256 _pid, uint256 _reward)
+    function notifyRewardAmount(uint256 _pid, uint256 _reward, uint256 _duration)
         external
         onlyOwner
     {
         require(_reward > 0, "Can not add zero balance");
+        require(_duration > 0, "Must define valid duration length");
 
         PoolInfo storage pool = poolInfo[_pid];
         pool.rewardTokenAddress.safeTransferFrom(
@@ -278,6 +278,9 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         );
         // Update reward values
         updateRewardPerTokenStored(_pid);
+
+        // Update duration of pool
+        pool.duration = _duration;
 
         // Rewardrate must stay at a constant since it's used by end-users claiming rewards after the reward period has finished.
         if (block.timestamp >= pool.periodFinish) {
@@ -301,6 +304,7 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             _pid,
             address(pool.rewardTokenAddress),
             _reward,
+            pool.duration,
             pool.periodFinish
         );
     }
