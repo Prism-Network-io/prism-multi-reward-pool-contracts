@@ -35,6 +35,14 @@ const config: HardhatUserConfig = {
       url: process.env.MAINET_URL || "",
       accounts: deployerKey,
     },
+    sep: {
+      url: process.env.SEP_URL || "",
+      accounts: deployerKey,
+    },
+    kovan: {
+      url: process.env.KOVAN_URL || "",
+      accounts: deployerKey,
+    },
     bsc: {
       url: process.env.BSC_URL || "",
       accounts: deployerKey,
