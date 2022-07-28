@@ -14,14 +14,13 @@ abstract contract LPTokenWrapper is Ownable {
 
     // Returns the total staked tokens within the contract
     uint256 public totalSupply;
-    uint256 public startTime;
-    uint256 public burnFee;
+    uint256 public tokenFee;
 
     struct Balance {
         uint256 balance;
     }
 
-    address public treasury;
+    address public treasury;    // The address to receive devFee
 
     mapping(address => Balance) internal _balances;
 
@@ -34,7 +33,7 @@ abstract contract LPTokenWrapper is Ownable {
         devFee = _devFee;
         stakingToken = IERC20(_stakingToken);
         treasury = _treasury;
-        burnFee = _tokenFee;
+        tokenFee = _tokenFee;
     }
 
     // Returns staking balance of the account
@@ -44,32 +43,36 @@ abstract contract LPTokenWrapper is Ownable {
 
     // Stake funds into the pool
     function stake(uint256 amount) public virtual {
+        // Transfer staking token from caller to contract
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        if (burnFee > 0) {
-            uint256 tokenBurnBalance = amount.mul(burnFee).div(10000);
-            uint256 stakedBalance = amount.sub(tokenBurnBalance);
+
+        if (tokenFee > 0) {
+            uint256 tokenFeeBalance = amount.mul(tokenFee).div(10000);
+            uint256 stakedBalance = amount.sub(tokenFeeBalance);
             _balances[msg.sender].balance = _balances[msg.sender].balance.add(
                 stakedBalance
             );
             totalSupply = totalSupply.add(stakedBalance);
             return;
         }
-        // Increment sender's balances and total supply
 
+        // Increment sender's balances and total supply
         _balances[msg.sender].balance = _balances[msg.sender].balance.add(
             amount
         );
-        totalSupply = totalSupply.add(amount);
+
+
     }
 
     // Subtract balances withdrawn from the user
     function withdraw(uint256 amount) public virtual {
+        // Reduce sender's balances and total supply
         totalSupply = totalSupply.sub(amount);
         _balances[msg.sender].balance = _balances[msg.sender].balance.sub(
             amount
         );
 
-        // Calculate the withdraw tax (it's 1.5% of the amount)
+        // Calculate the withdraw tax
         uint256 tax = amount.mul(devFee).div(1000);
 
         // Transfer the tokens to user

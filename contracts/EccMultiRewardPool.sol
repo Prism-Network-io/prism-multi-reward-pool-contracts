@@ -15,7 +15,6 @@ import "./interfaces/IERC20Metadata.sol";
 contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     uint256 public immutable stakingTokenMultiplier;
-    uint256 public immutable deployedTime;
 
     struct PoolInfo {
         IERC20Metadata rewardTokenAddress;
@@ -74,7 +73,6 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         );
         stakingTokenMultiplier =
             10**uint256(IERC20Metadata(_stakingToken).decimals());
-        deployedTime = block.timestamp;
     }
 
     /* @dev Updates the rewards a user has earned */
@@ -270,8 +268,9 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(_reward > 0, "Can not add zero balance");
         require(_duration > 0, "Must define valid duration length");
 
-        // Transfer reward token from caller to contract
         PoolInfo storage pool = poolInfo[_pid];
+
+        // Transfer reward token from caller to contract
         uint256 rewardAmount = _reward*10**uint256(IERC20Metadata(pool.rewardTokenAddress).decimals());
         pool.rewardTokenAddress.safeTransferFrom(
             msg.sender,
