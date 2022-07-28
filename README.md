@@ -1,8 +1,8 @@
 # Multi Reward Staking Pools
 
-The Multi Reward Staking Pool contract allows for a user to deposit a single asset (`stakingToken`) and receive multiple different types of reward tokens. Pools are filled up from transferring in reward tokens and distributed amongst stakers over time until the rewards run out. 
+The Multi Reward Staking Pool contract allows for a user to deposit a single asset and receive multiple different types of reward tokens. Pools are filled up from transferring in reward tokens and distributed amongst stakers over time until the rewards run out. 
 
-APY is therefore variable, based on:
+APY of each reward pool is therefore variable, based on:
 
 - The price of the reward token
 - The `duration` of the reward pool
@@ -43,7 +43,7 @@ Allows a user to claim any pending reward tokens they have. If any of the reward
 
 #### addRewardPool(IERC20Metadata _rewardToken)
 
-Creates a new reward pool for the input reward token.
+Creates a new reward pool for the input reward token. Caller must have called the approve function on the reward token to give allownace to the Multi Reward Pool Contract.
 
 - `_rewardToken`: The token to be paid out
 
@@ -101,11 +101,17 @@ Enables the deployer of the contract to set a new treasury address.
 
 ### View Functions
 
-### endDate(uint256 _pid)
+#### balanceOf(address account)
+
+Returns the staked balance of the specified address.
+
+- `account`: The address to check staked balance.
+
+#### endDate(uint256 _pid)
 
 Returns the end date of the specified reward pool.
 
-### rewardPerToken(uint256 _pid)
+#### rewardPerToken(uint256 _pid)
 
 Returns the current rate of reward per token for a specified reward pool.
 #### earned(address account, uint256 _pid)

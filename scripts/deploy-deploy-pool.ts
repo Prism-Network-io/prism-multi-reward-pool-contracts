@@ -1,8 +1,8 @@
 /*
 TOKEN ADDRESSES
 
-GOERLI
-"0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"  // UNI
+GOERLI UNI: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"
+KOVAN DAI: "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"
 
 */
 
@@ -50,17 +50,19 @@ async function main() {
   await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
   console.log('Reward Pool for', rewardToken.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
 
-  // Verify Contract
-  await hre.run("verify:verify", {
-    address: multiRewardPool.address,
-    constructorArguments: [
-      deployedStakingToken,
-      treasuryAddress,
-      devFee,
-      tokenFee,
-    ],
-  });
-  console.log('Contract verified successfully');
+  // // Verify Contract
+  // await hre.run("verify:verify", {
+  //   address: multiRewardPool.address,
+  //   constructorArguments: [
+  //     deployedStakingToken,
+  //     treasuryAddress,
+  //     devFee,
+  //     tokenFee,
+  //   ],
+  // });
+  // console.log('Contract verified successfully');
+
+  console.log('Deployment Completed');
 }
 
 // We recommend this pattern to be able to use async/await everywhere

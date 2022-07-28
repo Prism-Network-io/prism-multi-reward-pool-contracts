@@ -1,13 +1,4 @@
-/*
-TOKEN ADDRESSES
-
-GOERLI
-"0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"  // UNI
-
-*/
-
 import { ethers } from "hardhat";
-const hre = require("hardhat");
 
 async function main() {
 
@@ -21,7 +12,7 @@ async function main() {
     const rewardAmount = 1000;
 
     //Deploy Mocks
-    console.log("deploying mocks");
+    console.log("Deploying mock tokens");
 
     const MockRewardContract = await ethers.getContractFactory("MockReward");
     const mockReward = await MockRewardContract.deploy(
@@ -66,17 +57,7 @@ async function main() {
     await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
     console.log('Reward Pool for', mockReward.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
 
-    // Verify Contract
-    // await hre.run("verify:verify", {
-    //     address: multiRewardPool.address,
-    //     constructorArguments: [
-    //         mockStaking.address,
-    //         treasuryAddress,
-    //         devFee,
-    //         tokenFee,
-    //     ],
-    // });
-    // console.log('Contract verified successfully');
+    console.log('Deployment Completed');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
