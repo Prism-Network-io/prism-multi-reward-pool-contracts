@@ -55,6 +55,15 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 rewardDuration,
         uint256 rewardPeriodFinish
     );
+    event RewardPoolExtended(
+        uint256 rewardPoolID,
+        address rewardTokenAddress,
+        uint256 oldRewardAmount,
+        uint256 newRewardAmount,
+        uint256 totalRewardAmount,
+        uint256 rewardDuration,
+        uint256 rewardPeriodFinish
+    );
 
     // Set the staking token, addresses, various fee variables and the prism fee reduction level amounts
     constructor(
@@ -260,6 +269,54 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         emit RewardPoolAdded(_rewardTokenID, address(_rewardToken));
     }
 
+    /** @dev Called to add more reward tokens to an existing pool */
+    function extendRewardPool(uint256 _pid, uint256 _reward, uint256 _duration)
+        external
+        onlyOwner
+    {
+        require(_reward > 0, "Can not add zero balance");
+        require(_duration > 0, "Must define valid duration length");
+
+        PoolInfo storage pool = poolInfo[_pid];
+
+        // Transfer reward token from caller to contract
+        pool.rewardTokenAddress.safeTransferFrom(
+            msg.sender,
+            address(this),
+            _reward
+        );
+
+        // Update reward values
+        updateRewardPerTokenStored(_pid);
+
+        // Update duration of pool
+        pool.duration = _duration;
+
+        // Remaining time for the pool
+        uint256 remainingTime = pool.periodFinish.sub(block.timestamp);
+        // And the rewards
+        uint256 rewardsRemaining = remainingTime.mul(pool.rewardRate);
+        // Find new amount of rewards in pool
+        uint256 totalRewards = rewardsRemaining.add(_reward);
+        // Set the current rate
+        pool.rewardRate = _reward.add(rewardsRemaining).div(pool.duration);
+
+        // Set the last updated time
+        pool.lastUpdateTime = block.timestamp;
+
+        // Add the period to be equal to duration set
+        pool.periodFinish = block.timestamp.add(pool.duration);
+        emit RewardPoolExtended(
+            _pid,
+            address(pool.rewardTokenAddress),
+            rewardsRemaining,
+            _reward,
+            totalRewards,
+            pool.duration,
+            pool.periodFinish
+        );
+    }
+
     /** @dev Called to start the pool. Reward amount + duration is defined in the input. */
     function startRewardPool(uint256 _pid, uint256 _reward, uint256 _duration)
         external
@@ -271,11 +328,10 @@ contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         PoolInfo storage pool = poolInfo[_pid];
 
         // Transfer reward token from caller to contract
-        uint256 rewardAmount = _reward*10**uint256(IERC20Metadata(pool.rewardTokenAddress).decimals());
         pool.rewardTokenAddress.safeTransferFrom(
             msg.sender,
             address(this),
-            rewardAmount
+            _reward
         );
 
         // Update reward values

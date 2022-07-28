@@ -59,7 +59,8 @@ abstract contract LPTokenWrapper is Ownable {
         _balances[msg.sender].balance = _balances[msg.sender].balance.add(
             amount
         );
-        
+        }
+
     }
 
     // Subtract balances withdrawn from the user
