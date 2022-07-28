@@ -20,8 +20,8 @@ async function main() {
   // Changing Variables
   const deployedStakingToken = "0x06b8a2102C23DA15Eb7904e55d3cc692F58B4077";
   const deployedRewardToken = "0x881EED57411a8bD71A5e65Bc8990672941573794";
-  const deployedMultiPool = "0x06b8a2102C23DA15Eb7904e55d3cc692F58B4077";
-  const rewardAmount = 1;
+  const deployedMultiPool = "0x24fa8818d4934EFd1Aa41228d47597d5a896B895";
+  const rewardAmount = 222;
 
 
   // //Deploy Pool
@@ -44,7 +44,7 @@ async function main() {
   // Starts Reward Pool
   await rewardToken.approve(multiPool.address, rewardAmount);
   console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
-  await multiPool.startRewardPool(0, rewardAmount, poolDuration);
+  await multiPool.startRewardPool(1, rewardAmount, poolDuration);
   console.log('Reward Pool for', rewardToken.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
 
   console.log('Contract verified successfully');
