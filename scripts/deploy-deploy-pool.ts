@@ -19,14 +19,14 @@ async function main() {
 
   // Changing Variables
   const deployedStakingToken = "0x06b8a2102C23DA15Eb7904e55d3cc692F58B4077";
-  const deployedRewardToken = "0x881EED57411a8bD71A5e65Bc8990672941573794";
+  const deployedRewardToken = "0x85b1fe94f74ea4d354ca85054d041ee167340ee3";
 
   const rewardAmount = 1000;
 
 
   // //Deploy Pool
-  const MultiRewardPool = await ethers.getContractFactory("MultiRewardPool");
-  const multiRewardPool = await MultiRewardPool.deploy(
+  const MultiRewardPoolContract = await ethers.getContractFactory("MultiRewardPool");
+  const multiRewardPool = await MultiRewardPoolContract.deploy(
     deployedStakingToken,      // Staking Token Address
     treasuryAddress,  // Treasury Address
     devFee,           // Dev Fee (%)
