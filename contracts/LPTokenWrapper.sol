@@ -63,7 +63,7 @@ abstract contract LPTokenWrapper is Ownable {
     }
 
     // Subtract balances withdrawn from the user
-    function withdraw(uint256 amount, address user) public virtual {
+    function withdraw(uint256 amount) public virtual {
         totalSupply = totalSupply.sub(amount);
         _balances[msg.sender].balance = _balances[msg.sender].balance.sub(
             amount
