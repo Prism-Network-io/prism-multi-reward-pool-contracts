@@ -46,6 +46,7 @@ abstract contract LPTokenWrapper is Ownable {
         // Transfer staking token from caller to contract
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
+        // Increment sender's balances and total supply
         if (tokenFee > 0) {
             uint256 tokenFeeBalance = amount.mul(tokenFee).div(10000);
             uint256 stakedBalance = amount.sub(tokenFeeBalance);
@@ -54,14 +55,11 @@ abstract contract LPTokenWrapper is Ownable {
             );
             totalSupply = totalSupply.add(stakedBalance);
             return;
-        }
-
-        // Increment sender's balances and total supply
+        } else {
         _balances[msg.sender].balance = _balances[msg.sender].balance.add(
             amount
         );
-
-
+        
     }
 
     // Subtract balances withdrawn from the user
