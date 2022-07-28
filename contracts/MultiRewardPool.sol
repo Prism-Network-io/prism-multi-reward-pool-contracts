@@ -7,12 +7,12 @@ import "./LPTokenWrapper.sol";
 import "./interfaces/IERC20Metadata.sol";
 
 /**
- * @title EccMultiRewardPool
+ * @title MultiRewardPool
  * @author Empire Capital
- * @dev Stake ECC token to earn multi rewards
+ * @dev Stake token to earn multiple different reward tokens
  */
 
-contract EccMultiRewardPool is LPTokenWrapper, ReentrancyGuard {
+contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     uint256 public immutable stakingTokenMultiplier;
 
