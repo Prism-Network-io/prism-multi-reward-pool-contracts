@@ -22,13 +22,48 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
+const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
+
 const config: HardhatUserConfig = {
   solidity: "0.6.12",
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    hardhat: {
+    },
+    goerli: {
+      url: process.env.GOERLI_URL || "",
+      accounts: deployerKey,
+    },
+    mainet: {
+      url: process.env.MAINET_URL || "",
+      accounts: deployerKey,
+    },
+    bsc: {
+      url: process.env.BSC_URL || "",
+      accounts: deployerKey,
+    },
+    polygon: {
+      url: process.env.POLYGON_URL || "",
+      accounts: deployerKey,
+    },
+    fantom: {
+      url: process.env.FANTOM_URL || "",
+      accounts: deployerKey,
+    },
+    avalanche: {
+      url: process.env.AVALANCHE_URL || "",
+      accounts: deployerKey,
+    },
+    cronos: {
+      url: process.env.CRONOS_URL || "",
+      accounts: deployerKey,
+    },
+    gnosis: {
+      url: process.env.GNOSIS_URL || "",
+      accounts: deployerKey,
+    },
+    kava: {
+      url: process.env.KAVA_URL || "",
+      accounts: deployerKey,
     },
   },
   gasReporter: {
@@ -36,8 +71,38 @@ const config: HardhatUserConfig = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+    apiKey: {
+      // goerli: process.env.GOERLISCAN_API_KEY,
+      // mainet: process.env.ETHERSCAN_API_KEY,
+      // bsc: process.env.BSCSCAN_API_KEY,
+      // polygon: process.env.POLYSCAN_API_KEY,
+      // fantom: process.env.FANTOMSCAN_API_KEY,
+      // avalanche: process.env.AVASCAN_API_KEY,
+      // cronos: process.env.CRONOSCAN_API_KEY,
+      // gnosis: process.env.GNOSISCAN_API_KEY,
+      // kava: process.env.KAVASCAN_API_KEY,
+    },
+    customChains: [
+      {
+        network: "cronos",
+        chainId: 25,
+        urls: {
+          apiURL: "https://api.cronoscan.com/",
+          browserURL: "https://cronoscan.com/",
+        }
+      },
+      {
+        network: "kava",
+        chainId: 2222,
+        urls: {
+          apiURL: "https://explorer.kava.io/api",
+          browserURL: "https://explorer.kava.io",
+        }
+      }
+
+    ]
+  }
 };
+
 
 export default config;
