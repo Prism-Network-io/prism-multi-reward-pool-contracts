@@ -25,51 +25,70 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
-  solidity: "0.6.12",
+  solidity: {
+    version: "0.6.12",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000
+      }
+    }
+  },
   networks: {
     goerli: {
       url: process.env.GOERLI_URL || "",
+      chainId: 5,
       accounts: deployerKey,
     },
     sepolia: {
       url: process.env.SEPOLIA_URL || "",
+      chainId: 11155111,
       accounts: deployerKey,
     },
     kovan: {
       url: process.env.KOVAN_URL || "",
       accounts: deployerKey,
-      gas: 6000000,
+      chainId: 42,
+      gas: 30000000,
     },
     mainet: {
       url: process.env.MAINET_URL || "",
+      chainId: 1,
       accounts: deployerKey,
     },
     bsc: {
       url: process.env.BSC_URL || "",
+      chainId: 56,
       accounts: deployerKey,
     },
     polygon: {
       url: process.env.POLYGON_URL || "",
+      chainId: 137,
       accounts: deployerKey,
     },
     fantom: {
       url: process.env.FANTOM_URL || "",
+      chainId: 250,
       accounts: deployerKey,
     },
     avalanche: {
       url: process.env.AVALANCHE_URL || "",
+      chainId: 43114,
       accounts: deployerKey,
     },
     cronos: {
       url: process.env.CRONOS_URL || "",
+      chainId: 25,
       accounts: deployerKey,
     },
     gnosis: {
       url: process.env.GNOSIS_URL || "",
+      chainId: 100,
       accounts: deployerKey,
     },
     kava: {
       url: process.env.KAVA_URL || "",
+      chainId: 2222,
       accounts: deployerKey,
     },
   },

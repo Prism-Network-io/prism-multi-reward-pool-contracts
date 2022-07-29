@@ -44,23 +44,28 @@ async function main() {
     deployedRewardToken // The deployed contract address
   );
 
+  // const stakingContract = await ethers.getContractFactory("MockStaking");
+  // const stakingToken = await stakingContract.attach(
+  //   deployedStakingToken // The deployed contract address
+  // );
+
   // Starts Reward Pool
   await rewardToken.approve(multiRewardPool.address, rewardAmount);
   console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
   await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
   console.log('Reward Pool for', rewardToken.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
 
-  // // Verify Contract
-  // await hre.run("verify:verify", {
-  //   address: multiRewardPool.address,
-  //   constructorArguments: [
-  //     deployedStakingToken,
-  //     treasuryAddress,
-  //     devFee,
-  //     tokenFee,
-  //   ],
-  // });
-  // console.log('Contract verified successfully');
+  // Verify Contract  
+  await hre.run("verify:verify", {
+    address: multiRewardPool.address,
+    constructorArguments: [
+      deployedStakingToken,
+      treasuryAddress,
+      devFee,
+      tokenFee,
+    ],
+  });
+  console.log('Contract verified successfully');
 
   console.log('Deployment Completed');
 }
