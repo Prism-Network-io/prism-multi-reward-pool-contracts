@@ -28,6 +28,7 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.6.12",
     settings: {
+      "viaIR": true, // fixes stack too deep errors w/ optimized via-IR code generation pipeline
       optimizer: {
         enabled: true,
         runs: 1000

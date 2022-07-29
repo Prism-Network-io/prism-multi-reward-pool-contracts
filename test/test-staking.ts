@@ -50,6 +50,11 @@ describe("Multi Reward Pool Tests", async function () {
   let poolRewards = 100000;
   let poolDuration = 4000;
 
+  describe("Single Reward Pool: Test extending of pool", async function () {
+    
+  });
+
+
   describe("Single Reward Pool: Test distribution over time", async function () {
 
     // Have users stake tokens
@@ -62,8 +67,8 @@ describe("Multi Reward Pool Tests", async function () {
     });
 
     const totalStakedTokens = await mockStaking.balanceOf(multiRewardPool.address);
-    const addr1percentOfTotalStaked = addr1StakeAmount/totalStakedTokens;
-    const addr2percentOfTotalStaked = addr2StakeAmount/totalStakedTokens;
+    const addr1percentOfTotalStaked = addr1StakeAmount/Number(totalStakedTokens);
+    const addr2percentOfTotalStaked = addr2StakeAmount/Number(totalStakedTokens);
 
     console.log(addr1, '(addr1) staked', addr1StakeAmount, 'representing', addr1percentOfTotalStaked,'% of the supply');
     console.log(addr2, '(addr2) staked', addr2StakeAmount, 'representing', addr2percentOfTotalStaked,'% of the supply');
