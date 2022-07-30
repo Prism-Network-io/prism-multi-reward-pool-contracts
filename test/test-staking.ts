@@ -1,18 +1,12 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { MockStaking as MockStakingType,
-         MockReward as MockRewardType,
-         MultiRewardPool as MultiRewardPoolType }
-          from "../typechain";
+import { MockStaking, MockReward, MultiRewardPool } from "../typechain";
 
 // Typechain setup
-let MockStaking;
-let mockStaking: MockStakingType;
-let MockReward;
-let mockReward: MockRewardType;
-let MultiRewardPool;
-let multiRewardPool: MultiRewardPoolType;
+let mockStaking: MockStaking;
+let mockReward: MockReward;
+let multiRewardPool: MultiRewardPool;
 let owner: SignerWithAddress;
 let addr1: SignerWithAddress;
 let addr2: SignerWithAddress;
@@ -26,18 +20,15 @@ describe("Multi Reward Pool Tests", async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
 
     // Deploy MockStaking
-    MockStaking = await ethers.getContractFactory("MockStaking");
-    mockStaking = await MockStaking.deploy();
+    mockStaking = (await (await ethers.getContractFactory("MockStaking")) .deploy()) as MockStaking;
     await mockStaking.deployed();
 
     // Deploy MockReward
-    MockReward = await ethers.getContractFactory("MockReward");
-    mockReward = await MockReward.deploy();
+    mockReward = (await (await ethers.getContractFactory("MockReward")) .deploy()) as MockReward;
     await mockReward.deployed();
 
     // Deploy MultiRewardPool
-    MultiRewardPool = await ethers.getContractFactory("MultiRewardPool");
-    multiRewardPool = await MultiRewardPool.deploy();
+    multiRewardPool = (await (await ethers.getContractFactory("MultiRewardPool")) .deploy()) as MultiRewardPool;
     await multiRewardPool.deployed();
   });
 
