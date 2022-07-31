@@ -278,6 +278,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(_duration > 0, "Must define valid duration length");
 
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 timeNow = block.timestamp;
 
         // Transfer reward token from caller to contract
         pool.rewardTokenAddress.safeTransferFrom(
@@ -293,19 +294,19 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.duration = _duration;
 
         // Remaining time for the pool
-        uint256 remainingTime = pool.periodFinish.sub(block.timestamp);
+        uint256 remainingTime = pool.periodFinish.sub(timeNow);
         // And the rewards
         uint256 rewardsRemaining = remainingTime.mul(pool.rewardRate);
         // Find new amount of rewards in pool
         uint256 totalRewards = rewardsRemaining.add(_reward);
         // Set the current rate
-        pool.rewardRate = _reward.add(rewardsRemaining).div(pool.duration);
+        pool.rewardRate = totalRewards.div(pool.duration);
 
         // Set the last updated time
-        pool.lastUpdateTime = block.timestamp;
+        pool.lastUpdateTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = block.timestamp.add(pool.duration);
+        pool.periodFinish = timeNow.add(pool.duration);
         emit RewardPoolExtended(
             _pid,
             address(pool.rewardTokenAddress),
@@ -326,6 +327,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(_duration > 0, "Must define valid duration length");
 
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 timeNow = block.timestamp;
 
         // Transfer reward token from caller to contract
         pool.rewardTokenAddress.safeTransferFrom(
@@ -334,22 +336,23 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             _reward
         );
 
-        // Update reward values
+        // Set reward values
         updateRewardPerTokenStored(_pid);
 
-        // Update duration of pool
+        // Set duration of pool
         pool.duration = _duration;
 
-        // Rewardrate must stay at a constant since it's used by end-users claiming rewards after the reward period has finished.
         // Set the current rate
         pool.rewardRate = _reward.div(pool.duration);
 
         // Set the last updated time
-        pool.lastUpdateTime = block.timestamp;
-        pool.startTime = block.timestamp;
+        pool.lastUpdateTime = timeNow;
+
+        // Set the initial start time
+        pool.startTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = block.timestamp.add(pool.duration);
+        pool.periodFinish = timeNow.add(pool.duration);
         emit RewardPoolStarted(
             _pid,
             address(pool.rewardTokenAddress),
