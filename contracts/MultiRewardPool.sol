@@ -362,7 +362,9 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         );
     }
 
-    /** @dev Ejects any remaining tokens from the reward pool specified. Callable only after the pool has started and the pools reward distribution period has finished. */
+    /** @dev Ejects any remaining tokens from the reward pool specified.
+             Callable only after the pool has started and the pools reward distribution period has finished.
+             DO NOT USE IF REWARD TOKEN = STAKING TOKEN */
     function eject(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -374,7 +376,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
     }
 
-    /** @dev Ejects any remaining tokens from all reward pools */
+    /** @dev Ejects any remaining tokens from all reward pools. DO NOT USE IF REWARD TOKEN = STAKING TOKEN */
     function ejectAll() public onlyOwner {
         // loop through all reward pools to eject all
         for (uint256 i = 0; i < poolInfo.length; i++) {
