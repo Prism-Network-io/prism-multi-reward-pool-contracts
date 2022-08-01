@@ -11,7 +11,6 @@ import "./interfaces/IERC20Metadata.sol";
  * @author Empire Capital
  * @dev Stake token to earn multiple different reward tokens
  */
-
 contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     uint256 public immutable stakingTokenMultiplier;
@@ -34,7 +33,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
     PoolInfo[] public poolInfo;
 
-    mapping(address => bool) public addedRewardTokens; // Used for preventing LP tokens from being added twice in add().
+    mapping(address => bool) public addedRewardTokens;
     mapping(uint256 => mapping(address => UserRewardInfo)) public rewardsInPool;
 
     event Withdrawn(address indexed user, uint256 amount);
@@ -65,7 +64,6 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 rewardPeriodFinish
     );
 
-    // Set the staking token, addresses, various fee variables and the prism fee reduction level amounts
     constructor(
         address _stakingToken,
         address _treasury,
@@ -101,6 +99,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         }
     }
 
+    /* Updates the amount of rewards to distribute in a pool per staked token */
     function updateRewardPerTokenStored(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -108,12 +107,13 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.lastUpdateTime = lastTimeRewardsActive(_pid);
     }
 
+    /* @dev Updates the last time the calculations were done for pool rewards */
     function lastTimeRewardsActive(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         return Math.min(block.timestamp, pool.periodFinish);
     }
 
-    /* @dev Returns the current rate of rewards per token */
+    /* @dev Returns the time that a specified pool will end */
     function endDate(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -420,7 +420,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.periodFinish = block.timestamp;
     }
 
-    /** @dev Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders */
+    /** @dev Added to support recovering tokens that are stuck on the contract */
     function emergencyWithdraw(address tokenAddress, uint256 tokenAmount)
         external
         onlyOwner

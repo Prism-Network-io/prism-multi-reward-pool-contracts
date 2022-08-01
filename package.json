@@ -36,7 +36,7 @@
     "typechain": "^5.2.0",
     "typescript": "^4.7.4"
   },
-  "description": "This project is meant to implement a boost-able staking token pool that provides a percentage increase on deposits that consequently boost the rewards a user takes. Multiple seperate reward pools can be added to distribute tokens proportionally to stakers over a set time period so that a single staked token can be used to farm multiple tokens at once.",
+  "description": "This project implements a staking pool. Multiple seperate reward pools can be added to distribute tokens proportionally to stakers over a set time period so that a single staked token can be used to farm multiple tokens at once.",
   "version": "1.0.0",
   "main": ".eslintrc.js",
   "directories": {
