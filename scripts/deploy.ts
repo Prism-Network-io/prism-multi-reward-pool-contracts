@@ -18,8 +18,8 @@ async function main() {
   const poolDuration = 3600;
 
   // Changing Variables
-  const deployedStakingToken = "0x06b8a2102C23DA15Eb7904e55d3cc692F58B4077";
-  const deployedRewardToken = "0x85b1fe94f74ea4d354ca85054d041ee167340ee3";
+  const deployedStakingToken = "0x9940D3Fd7D679b6f66f7C30388b6D4434Bc01047";
+  const deployedRewardToken = "0xe1485A57aD6C12AA8a1Acde86558BF6E938959C0";
 
   const rewardAmount = 1000;
 
@@ -44,10 +44,10 @@ async function main() {
     deployedRewardToken // The deployed contract address
   );
 
-  // const stakingContract = await ethers.getContractFactory("MockStaking");
-  // const stakingToken = await stakingContract.attach(
-  //   deployedStakingToken // The deployed contract address
-  // );
+  const stakingContract = await ethers.getContractFactory("MockStaking");
+  const stakingToken = await stakingContract.attach(
+    deployedStakingToken // The deployed contract address
+  );
 
   // Starts Reward Pool
   await rewardToken.approve(multiRewardPool.address, rewardAmount);
@@ -65,9 +65,15 @@ async function main() {
       tokenFee,
     ],
   });
-  console.log('Contract verified successfully');
+  console.log(deployedStakingToken,treasuryAddress,devFee,tokenFee);
 
   console.log('Deployment Completed');
+
+  // await stakingToken.approve(multiRewardPool.address, ethers.utils.parseEther("999999999"));
+  // console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
+
+  // await multiRewardPool.stake(0, ethers.utils.parseEther("1"));
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

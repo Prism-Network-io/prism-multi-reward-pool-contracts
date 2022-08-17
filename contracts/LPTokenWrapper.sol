@@ -50,15 +50,13 @@ abstract contract LPTokenWrapper is Ownable {
         if (tokenFee > 0) {
             uint256 tokenFeeBalance = amount.mul(tokenFee).div(10000);
             uint256 stakedBalance = amount.sub(tokenFeeBalance);
-            _balances[msg.sender].balance = _balances[msg.sender].balance.add(
-                stakedBalance
-            );
+            _balances[msg.sender].balance = _balances[msg.sender].balance.add(stakedBalance);
             totalSupply = totalSupply.add(stakedBalance);
             return;
         } else {
-        _balances[msg.sender].balance = _balances[msg.sender].balance.add(
-            amount
-        );
+            _balances[msg.sender].balance = _balances[msg.sender].balance.add(amount);
+            totalSupply = totalSupply.add(amount);
+            return;
         }
 
     }

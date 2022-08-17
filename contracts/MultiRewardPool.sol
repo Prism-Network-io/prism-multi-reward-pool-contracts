@@ -120,6 +120,10 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         return pool.periodFinish;
     }
 
+    function poolLength() public view returns (uint256) {
+        return poolInfo.length;
+    }
+
     /* @dev Returns the current rate of rewards per token */
     function rewardPerToken(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];

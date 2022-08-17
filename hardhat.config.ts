@@ -36,13 +36,18 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
+    rinkeby: {
+      url: process.env.RINKEBY_URL || "",
+      chainId: 4,
+      accounts: deployerKey,
+    },
     goerli: {
       url: process.env.GOERLI_URL || "",
       chainId: 5,
       accounts: deployerKey,
     },
     sepolia: {
-      url: process.env.SEPOLIA_URL || "",
+      url: process.env.SEP_URL || "",
       chainId: 11155111,
       accounts: deployerKey,
     },
@@ -98,19 +103,7 @@ const config: HardhatUserConfig = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: {
-      goerli: "process.env.GOERLISCAN_API_KEY",
-      sepolia: "process.env.SEPOLIASCAN_API_KEY",
-      kovan: "process.env.KOVANSCAN_API_KEY",
-      mainet: "process.env.ETHERSCAN_API_KEY",
-      bsc: "process.env.BSCSCAN_API_KEY",
-      polygon: "process.env.POLYSCAN_API_KEY",
-      fantom: "process.env.FANTOMSCAN_API_KEY",
-      avalanche: "process.env.AVASCAN_API_KEY",
-      cronos: "process.env.CRONOSCAN_API_KEY",
-      gnosis: "process.env.GNOSISCAN_API_KEY",
-      kava: "process.env.KAVASCAN_API_KEY",
-    },
+    apiKey: process.env.ETHERSCAN_API_KEY,
     customChains: [
       {
         network: "cronos",
