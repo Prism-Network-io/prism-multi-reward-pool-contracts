@@ -93,8 +93,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             } else {
                 updateRewardPerTokenStored(i);
                 rewardsInPool[i][account].rewards = earned(account, i);
-                rewardsInPool[i][account].userRewardPerTokenPaid = pool
-                    .rewardPerTokenStored;
+                rewardsInPool[i][account].userRewardPerTokenPaid = pool.rewardPerTokenStored;
             }
         }
     }
@@ -156,13 +155,13 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         returns (uint256)
     {
         uint256 reward = rewardsInPool[_pid][msg.sender].rewards;
-        uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender]
-            .userRewardPerTokenPaid;
+        uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender].userRewardPerTokenPaid;
 
         return
             _balances[account]
                 .balance
-                .mul(rewardPerToken(_pid).sub(rewardPerTokenPaid))
+                .mul(rewardPerToken(_pid)
+                .sub(rewardPerTokenPaid))
                 .div(stakingTokenMultiplier)
                 .add(reward);
     }
@@ -368,7 +367,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
     /** @dev Ejects any remaining tokens from the reward pool specified.
              Callable only after the pool has started and the pools reward distribution period has finished.
-             DO NOT USE IF REWARD TOKEN = STAKING TOKEN */
+     */
     function eject(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -377,10 +376,16 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             "Cannot eject before period finishes or pool has started"
         );
         uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
+
+        // If Staking Token = Reward Token of Pool, do not withdraw the users staked tokens
+        if (address(stakingToken) == address(pool.rewardTokenAddress)) {
+            currBalance = currBalance.sub(totalSupply);
+        }
+
         pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
     }
 
-    /** @dev Ejects any remaining tokens from all reward pools. DO NOT USE IF REWARD TOKEN = STAKING TOKEN */
+    /** @dev Ejects any remaining tokens from all reward pool */
     function ejectAll() public onlyOwner {
         // loop through all reward pools to eject all
         for (uint256 i = 0; i < poolInfo.length; i++) {
@@ -389,14 +394,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             if (address(pool.rewardTokenAddress) == address(0)) {
                 continue;
             } else {
-                require(
-                    block.timestamp >= pool.periodFinish.add(12 hours),
-                    "Cannot eject before period finishes or pool has started, check all reward pool durations"
-                );
-                uint256 currBalance = pool.rewardTokenAddress.balanceOf(
-                    address(this)
-                );
-                pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
+                eject(i);
             }
         }
     }
