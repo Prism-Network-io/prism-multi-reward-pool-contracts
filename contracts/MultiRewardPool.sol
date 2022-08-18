@@ -384,9 +384,8 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     function eject(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
 
-        require(
-            block.timestamp >= pool.periodFinish.add(12 hours),
-            "Cannot eject before period finishes or pool has started"
+        require(block.timestamp >= pool.periodFinish.add(24 hours),
+            "Cannot eject before pool ends or within 24 hours of finish"
         );
         uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
 
@@ -457,4 +456,10 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     function setNewTreasury(address _treasury) external onlyOwner {
         treasury = _treasury;
     }
+    
+    // Gets total number of pools
+    function getTotalPools() external view returns(uint256) {
+        return poolInfo.length;
+    }
+    
 }
