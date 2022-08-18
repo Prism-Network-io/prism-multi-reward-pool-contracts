@@ -10,6 +10,8 @@ import "./interfaces/IERC20Metadata.sol";
  * @title MultiRewardPool
  * @author Empire Capital
  * @dev Stake token to earn multiple different reward tokens
+
+ Credit to Synthetix for original StakingReward contract
  */
 contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
@@ -282,6 +284,8 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         PoolInfo storage pool = poolInfo[_pid];
         uint256 timeNow = block.timestamp;
+        uint256 rewardsRemaining;
+        uint256 totalRewards;
 
         // Transfer reward token from caller to contract
         pool.rewardTokenAddress.safeTransferFrom(
@@ -290,26 +294,35 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             _reward
         );
 
-        // Update reward values
+        // Update reward per token stored value + last updated value
         updateRewardPerTokenStored(_pid);
 
         // Update duration of pool
         pool.duration = _duration;
 
-        // Remaining time for the pool
-        uint256 remainingTime = pool.periodFinish.sub(timeNow);
-        // And the rewards
-        uint256 rewardsRemaining = remainingTime.mul(pool.rewardRate);
-        // Find new amount of rewards in pool
-        uint256 totalRewards = rewardsRemaining.add(_reward);
-        // Set the current rate
-        pool.rewardRate = totalRewards.div(pool.duration);
+        // Update reward rate
+        // if pool has already finished
+        if (timeNow > pool.periodFinish) {
+            pool.rewardRate = _reward.div(_duration);
+            totalRewards = _reward;
+        } else {
+            // if pool has not finished yet
+            // Remaining time for the pool
+            uint256 remainingTime = pool.periodFinish.sub(timeNow);
+            // And the rewards
+            rewardsRemaining = remainingTime.mul(pool.rewardRate);
+            // Find new amount of rewards in pool
+            totalRewards = rewardsRemaining.add(_reward);
+            // Set the current rate
+            pool.rewardRate = totalRewards.div(pool.duration);            
+        }
 
         // Set the last updated time
         pool.lastUpdateTime = timeNow;
 
         // Add the period to be equal to duration set
         pool.periodFinish = timeNow.add(pool.duration);
+
         emit RewardPoolExtended(
             _pid,
             address(pool.rewardTokenAddress),
