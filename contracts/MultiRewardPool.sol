@@ -10,8 +10,9 @@ import "./interfaces/IERC20Metadata.sol";
  * @title MultiRewardPool
  * @author Empire Capital
  * @dev Stake token to earn multiple different reward tokens
- */
 
+ Credit to Synthetix for original StakingReward contract
+ */
 contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     uint256 public immutable stakingTokenMultiplier;
@@ -34,7 +35,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
     PoolInfo[] public poolInfo;
 
-    mapping(address => bool) public addedRewardTokens; // Used for preventing LP tokens from being added twice in add().
+    mapping(address => bool) public addedRewardTokens;
     mapping(uint256 => mapping(address => UserRewardInfo)) public rewardsInPool;
 
     event Withdrawn(address indexed user, uint256 amount);
@@ -65,7 +66,6 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 rewardPeriodFinish
     );
 
-    // Set the staking token, addresses, various fee variables and the prism fee reduction level amounts
     constructor(
         address _stakingToken,
         address _treasury,
@@ -95,12 +95,12 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             } else {
                 updateRewardPerTokenStored(i);
                 rewardsInPool[i][account].rewards = earned(account, i);
-                rewardsInPool[i][account].userRewardPerTokenPaid = pool
-                    .rewardPerTokenStored;
+                rewardsInPool[i][account].userRewardPerTokenPaid = pool.rewardPerTokenStored;
             }
         }
     }
 
+    /* Updates the amount of rewards to distribute in a pool per staked token */
     function updateRewardPerTokenStored(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -108,12 +108,13 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.lastUpdateTime = lastTimeRewardsActive(_pid);
     }
 
+    /* @dev Updates the last time the calculations were done for pool rewards */
     function lastTimeRewardsActive(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         return Math.min(block.timestamp, pool.periodFinish);
     }
 
-    /* @dev Returns the current rate of rewards per token */
+    /* @dev Returns the time that a specified pool will end */
     function endDate(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -156,13 +157,13 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         returns (uint256)
     {
         uint256 reward = rewardsInPool[_pid][msg.sender].rewards;
-        uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender]
-            .userRewardPerTokenPaid;
+        uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender].userRewardPerTokenPaid;
 
         return
             _balances[account]
                 .balance
-                .mul(rewardPerToken(_pid).sub(rewardPerTokenPaid))
+                .mul(rewardPerToken(_pid)
+                .sub(rewardPerTokenPaid))
                 .div(stakingTokenMultiplier)
                 .add(reward);
     }
@@ -282,6 +283,9 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(_duration > 0, "Must define valid duration length");
 
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 timeNow = block.timestamp;
+        uint256 rewardsRemaining;
+        uint256 totalRewards;
 
         // Transfer reward token from caller to contract
         pool.rewardTokenAddress.safeTransferFrom(
@@ -290,26 +294,35 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             _reward
         );
 
-        // Update reward values
+        // Update reward per token stored value + last updated value
         updateRewardPerTokenStored(_pid);
 
         // Update duration of pool
         pool.duration = _duration;
 
-        // Remaining time for the pool
-        uint256 remainingTime = pool.periodFinish.sub(block.timestamp);
-        // And the rewards
-        uint256 rewardsRemaining = remainingTime.mul(pool.rewardRate);
-        // Find new amount of rewards in pool
-        uint256 totalRewards = rewardsRemaining.add(_reward);
-        // Set the current rate
-        pool.rewardRate = _reward.add(rewardsRemaining).div(pool.duration);
+        // Update reward rate
+        // if pool has already finished
+        if (timeNow > pool.periodFinish) {
+            pool.rewardRate = _reward.div(_duration);
+            totalRewards = _reward;
+        } else {
+            // if pool has not finished yet
+            // Remaining time for the pool
+            uint256 remainingTime = pool.periodFinish.sub(timeNow);
+            // And the rewards
+            rewardsRemaining = remainingTime.mul(pool.rewardRate);
+            // Find new amount of rewards in pool
+            totalRewards = rewardsRemaining.add(_reward);
+            // Set the current rate
+            pool.rewardRate = totalRewards.div(pool.duration);            
+        }
 
         // Set the last updated time
-        pool.lastUpdateTime = block.timestamp;
+        pool.lastUpdateTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = block.timestamp.add(pool.duration);
+        pool.periodFinish = timeNow.add(pool.duration);
+
         emit RewardPoolExtended(
             _pid,
             address(pool.rewardTokenAddress),
@@ -330,6 +343,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(_duration > 0, "Must define valid duration length");
 
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 timeNow = block.timestamp;
 
         // Transfer reward token from caller to contract
         pool.rewardTokenAddress.safeTransferFrom(
@@ -338,22 +352,23 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             _reward
         );
 
-        // Update reward values
+        // Set reward values
         updateRewardPerTokenStored(_pid);
 
-        // Update duration of pool
+        // Set duration of pool
         pool.duration = _duration;
 
-        // Rewardrate must stay at a constant since it's used by end-users claiming rewards after the reward period has finished.
         // Set the current rate
         pool.rewardRate = _reward.div(pool.duration);
 
         // Set the last updated time
-        pool.lastUpdateTime = block.timestamp;
-        pool.startTime = block.timestamp;
+        pool.lastUpdateTime = timeNow;
+
+        // Set the initial start time
+        pool.startTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = block.timestamp.add(pool.duration);
+        pool.periodFinish = timeNow.add(pool.duration);
         emit RewardPoolStarted(
             _pid,
             address(pool.rewardTokenAddress),
@@ -363,19 +378,26 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         );
     }
 
-    /** @dev Ejects any remaining tokens from the reward pool specified. Callable only after the pool has started and the pools reward distribution period has finished. */
+    /** @dev Ejects any remaining tokens from the reward pool specified.
+             Callable only after the pool has started and the pools reward distribution period has finished.
+     */
     function eject(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
 
-        require(
-            block.timestamp >= pool.periodFinish.add(12 hours),
-            "Cannot eject before period finishes or pool has started"
+        require(block.timestamp >= pool.periodFinish.add(24 hours),
+            "Cannot eject before pool ends or within 24 hours of finish"
         );
         uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
+
+        // If Staking Token = Reward Token of Pool, do not withdraw the users staked tokens
+        if (address(stakingToken) == address(pool.rewardTokenAddress)) {
+            currBalance = currBalance.sub(totalSupply);
+        }
+
         pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
     }
 
-    /** @dev Ejects any remaining tokens from all reward pools */
+    /** @dev Ejects any remaining tokens from all reward pool */
     function ejectAll() public onlyOwner {
         // loop through all reward pools to eject all
         for (uint256 i = 0; i < poolInfo.length; i++) {
@@ -384,14 +406,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             if (address(pool.rewardTokenAddress) == address(0)) {
                 continue;
             } else {
-                require(
-                    block.timestamp >= pool.periodFinish.add(12 hours),
-                    "Cannot eject before period finishes or pool has started, check all reward pool durations"
-                );
-                uint256 currBalance = pool.rewardTokenAddress.balanceOf(
-                    address(this)
-                );
-                pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
+                eject(i);
             }
         }
     }
@@ -421,7 +436,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.periodFinish = block.timestamp;
     }
 
-    /** @dev Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders */
+    /** @dev Added to support recovering tokens that are stuck on the contract */
     function emergencyWithdraw(address tokenAddress, uint256 tokenAmount)
         external
         onlyOwner
@@ -441,4 +456,10 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     function setNewTreasury(address _treasury) external onlyOwner {
         treasury = _treasury;
     }
+    
+    // Gets total number of pools
+    function getTotalPools() external view returns(uint256) {
+        return poolInfo.length;
+    }
+    
 }
