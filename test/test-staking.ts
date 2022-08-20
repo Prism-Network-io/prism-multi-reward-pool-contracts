@@ -6,8 +6,6 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { MockStaking, MockReward, MultiRewardPool } from "../typechain";
 import { BigNumber } from "ethers";
 
-// TEST SCRIPT WITH POOL SETUP LOGIC IN 'BEFORE'
-
 describe("Multi Reward Pool Tests", () => {
 
   // Typechain setup
@@ -18,17 +16,19 @@ describe("Multi Reward Pool Tests", () => {
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
 
-  // Changing Variables
-  const poolRewards = ethers.utils.parseEther("1000");
-
+  // Defined Variables for tests
   const treasuryAddress = "0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB";
   const devFee = 150;   // 1.5%
   const tokenFee = 0;
-  const poolDuration = 4000;
-  let addr1percentOfTotalStaked = 0;
-  let addr2percentOfTotalStaked = 0;
+
+  const poolRewards = ethers.utils.parseEther("1000");
+  const poolDuration = 4000;  
   const addr1StakeAmount = ethers.utils.parseEther("75");
   const addr2StakeAmount = ethers.utils.parseEther("25");
+
+  // Initialize Variables
+  let addr1percentOfTotalStaked = 0;
+  let addr2percentOfTotalStaked = 0;
   let totalStakedTokens: BigNumber;
 
   // Before each test reset test accounts states + redeploy test contracts 
@@ -130,35 +130,35 @@ describe("Multi Reward Pool Tests", () => {
       console.log(addr2.address, '(addr2) expected to earn', addr2ExpectedEarningsQuarter, 'and earned:', addr2EarningsQuarter, 'at 1/4 duration');
     });
 
-      it("Should check rewards distributed correctly at half of duration", async function () {
-        await ethers.provider.send('evm_increaseTime', [1000]); // Increase time by 1000 (total 2000)
-        await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
+    it("Should check rewards distributed correctly at half of duration", async function () {
+      await ethers.provider.send('evm_increaseTime', [1000]); // Increase time by 1000 (total 2000)
+      await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
 
-        const totalExpectedEarningsHalf = Number(poolRewards) / 2;
-        const addr1ExpectedEarningsHalf = (totalExpectedEarningsHalf / 100) * addr1percentOfTotalStaked;
-        const addr2ExpectedEarningsHalf = (totalExpectedEarningsHalf / 100) * addr2percentOfTotalStaked;
-        const addr1EarningsHalf = await multiRewardPool.connect(addr1).earned(addr1.address, 0);
-        const addr2EarningsHalf = await multiRewardPool.connect(addr2).earned(addr2.address, 0);
-        expect(addr1ExpectedEarningsHalf).to.equal(Number(addr1EarningsHalf));
-        expect(addr2ExpectedEarningsHalf).to.equal(Number(addr2EarningsHalf));
-        console.log(addr1.address, '(addr1) expected to earn', addr1ExpectedEarningsHalf, 'and earned:', addr1EarningsHalf, 'at 1/2 duration');
-        console.log(addr2.address, '(addr2) expected to earn', addr2ExpectedEarningsHalf, 'and earned:', addr2EarningsHalf, 'at 1/2 duration');
-      });
+      const totalExpectedEarningsHalf = Number(poolRewards) / 2;
+      const addr1ExpectedEarningsHalf = (totalExpectedEarningsHalf / 100) * addr1percentOfTotalStaked;
+      const addr2ExpectedEarningsHalf = (totalExpectedEarningsHalf / 100) * addr2percentOfTotalStaked;
+      const addr1EarningsHalf = await multiRewardPool.connect(addr1).earned(addr1.address, 0);
+      const addr2EarningsHalf = await multiRewardPool.connect(addr2).earned(addr2.address, 0);
+      expect(addr1ExpectedEarningsHalf).to.equal(Number(addr1EarningsHalf));
+      expect(addr2ExpectedEarningsHalf).to.equal(Number(addr2EarningsHalf));
+      console.log(addr1.address, '(addr1) expected to earn', addr1ExpectedEarningsHalf, 'and earned:', addr1EarningsHalf, 'at 1/2 duration');
+      console.log(addr2.address, '(addr2) expected to earn', addr2ExpectedEarningsHalf, 'and earned:', addr2EarningsHalf, 'at 1/2 duration');
+    });
 
-      it("Should check rewards distributed correctly at completion of duration", async function () {
-        await ethers.provider.send('evm_increaseTime', [2000]); // Increase time by 2000 (total 4000)
-        await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
+    it("Should check rewards distributed correctly at completion of duration", async function () {
+      await ethers.provider.send('evm_increaseTime', [2000]); // Increase time by 2000 (total 4000)
+      await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
 
-        const totalExpectedEarningsComplete = Number(poolRewards);
-        const addr1ExpectedEarningsComplete = (totalExpectedEarningsComplete / 100) * addr1percentOfTotalStaked;
-        const addr2ExpectedEarningsComplete = (totalExpectedEarningsComplete / 100) * addr2percentOfTotalStaked;
-        const addr1EarningsComplete = await multiRewardPool.connect(addr1).earned(addr1.address, 0);
-        const addr2EarningsComplete = await multiRewardPool.connect(addr2).earned(addr2.address, 0);
-        expect(addr1ExpectedEarningsComplete).to.equal(Number(addr1EarningsComplete));
-        expect(addr2ExpectedEarningsComplete).to.equal(Number(addr2EarningsComplete));
-        console.log(addr1.address, '(addr1) expected to earn', addr1ExpectedEarningsComplete, 'and earned:', addr1EarningsComplete, 'at full duration');
-        console.log(addr2.address, '(addr2) expected to earn', addr2ExpectedEarningsComplete, 'and earned:', addr2EarningsComplete, 'at full duration');
-      });
+      const totalExpectedEarningsComplete = Number(poolRewards);
+      const addr1ExpectedEarningsComplete = (totalExpectedEarningsComplete / 100) * addr1percentOfTotalStaked;
+      const addr2ExpectedEarningsComplete = (totalExpectedEarningsComplete / 100) * addr2percentOfTotalStaked;
+      const addr1EarningsComplete = await multiRewardPool.connect(addr1).earned(addr1.address, 0);
+      const addr2EarningsComplete = await multiRewardPool.connect(addr2).earned(addr2.address, 0);
+      expect(addr1ExpectedEarningsComplete).to.equal(Number(addr1EarningsComplete));
+      expect(addr2ExpectedEarningsComplete).to.equal(Number(addr2EarningsComplete));
+      console.log(addr1.address, '(addr1) expected to earn', addr1ExpectedEarningsComplete, 'and earned:', addr1EarningsComplete, 'at full duration');
+      console.log(addr2.address, '(addr2) expected to earn', addr2ExpectedEarningsComplete, 'and earned:', addr2EarningsComplete, 'at full duration');
+    });
 
   });
 
