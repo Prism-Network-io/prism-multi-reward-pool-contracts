@@ -1,5 +1,7 @@
 # Multi Reward Staking Pools
 
+Credit to Synthetix (https://github.com/Synthetixio) for the original staking pool contract.
+
 The Multi Reward Staking Pool contract allows for a user to deposit a single asset and receive multiple different types of reward tokens. Pools are filled up from transferring in reward tokens and distributed amongst stakers over time until the rewards run out. 
 
 APY of each reward pool is therefore variable, based on:
