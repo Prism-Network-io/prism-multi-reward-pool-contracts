@@ -9,11 +9,12 @@ async function main() {
     const devFee = 150;   // 1.5%
     const tokenFee = 0;
     // const poolDuration = 604800;
-    // const poolDuration = 2419200; // 1 month
-    const poolDuration = 8838400; // 4 month
+    const poolDuration = 2419200; // 1 month
+    // const poolDuration = 8838400; // 4 month
 
     // Changing Variables
-    const rewardAmount = ethers.utils.parseEther("800000"); //100,000
+    const rewardAmount = ethers.utils.parseEther("200000"); //100,000
+    const startPool = false;
 
     //Deploy Mocks
     console.log("Deploying mock tokens");
@@ -62,6 +63,9 @@ async function main() {
     // Adds Reward Pool
     await multiRewardPool.addRewardPool(mockReward.address);
     console.log('Reward Pool added for Reward Token:', mockReward.address);
+
+    await delay(20000);
+
     await multiRewardPool.addRewardPool(mockReward2.address);
     console.log('Reward Pool added for Reward Token:', mockReward2.address);
     
@@ -69,17 +73,24 @@ async function main() {
     await mockReward.approve(multiRewardPool.address, rewardAmount);
     console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
 
+    await delay(20000);
+
     //Starts Reward Pool
     await mockReward2.approve(multiRewardPool.address, rewardAmount);
     console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
 
-    await delay(30000);
+    await delay(20000);
   
-    await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
-    console.log('Reward Pool for', mockReward.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
-    await multiRewardPool.startRewardPool(1, rewardAmount, poolDuration);
-    console.log('Reward Pool for', mockReward2.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
-    
+    if(startPool){
+      await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
+      console.log('Reward Pool for', mockReward.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
+      
+      await delay(20000);
+      
+      await multiRewardPool.startRewardPool(1, rewardAmount, poolDuration);
+      console.log('Reward Pool for', mockReward2.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
+    }
+
     console.log('Deployment Completed');
 
     console.log("----");
@@ -105,7 +116,7 @@ async function main() {
 
     console.log("pool length" + length);
 
-    await delay(30000);
+    await delay(60000);
 
     // Verify Contract  
     await hre.run("verify:verify", {
@@ -117,6 +128,40 @@ async function main() {
         tokenFee,
       ],
     });
+    
+
+    // // Verify Contract  
+    // await hre.run("verify:verify", {
+    //   address: mockReward.address,
+    //   constructorArguments: [
+    //     "Reward Token",
+    //     "REWARD",
+    //     1000000,
+    //     18,
+    //   ],
+    // });
+
+    // // Verify Contract  
+    // await hre.run("verify:verify", {
+    //   address: mockReward2.address,
+    //   constructorArguments: [
+    //     "Reward Token 2",
+    //     "REWARD2",
+    //     1000000,
+    //     18,
+    //   ],
+    // });
+
+    // // Verify Contract  
+    // await hre.run("verify:verify", {
+    //   address: mockStaking.address,
+    //   constructorArguments: [
+    //     "Staking Token",
+    //     "STAKE",
+    //     1000000,
+    //     18,
+    //   ],
+    // });
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -11,6 +11,7 @@ async function main() {
     // const poolDuration = 604800;
     // const poolDuration = 2419200; // 1 month
     const poolDuration = 4838400; // 2 month
+    const startPool = true;
 
     // Changing Variables
     const rewardAmount = ethers.utils.parseEther("1000"); //100,000
@@ -80,13 +81,15 @@ async function main() {
       console.log('Reward Pool added for Reward Token:', mockReward.address);
       
       //Starts Reward Pool
-      await mockReward.approve(multiRewardPool.address, ethers.utils.parseEther("1000"));
-      console.log('Approved', ethers.utils.parseEther("1000"), 'to be used by the Multi-Reward-Pool');
+      await mockReward.approve(multiRewardPool.address, rewardAmount);
+      console.log('Approved', rewardAmount, 'to be used by the Multi-Reward-Pool');
 
-    await delay(30000);
+    await delay(15000);
     
-    // await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
-    // console.log('Reward Pool for', mockReward.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
+    if(startPool){
+      await multiRewardPool.startRewardPool(0, rewardAmount, poolDuration);
+      console.log('Reward Pool for', mockReward.address, 'started. Total Reward Amount is', rewardAmount, 'and Duration of the pool is', poolDuration);
+    }
     
     console.log('Deployment Completed');
 

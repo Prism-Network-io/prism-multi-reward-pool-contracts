@@ -67,6 +67,11 @@ const config: HardhatUserConfig = {
       chainId: 56,
       accounts: deployerKey,
     },
+    bsctest: {
+      url: process.env.BSCTEST_URL || "",
+      chainId: 97,
+      accounts: deployerKey,
+    },
     polygon: {
       url: process.env.POLYGON_URL || "",
       chainId: 137,
