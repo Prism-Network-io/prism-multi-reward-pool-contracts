@@ -11,10 +11,8 @@ abstract contract LPTokenWrapper is Ownable {
 
     IERC20 public immutable stakingToken;
     uint256 public immutable devFee;        // 10 = 1%
-
-    // Returns the total staked tokens within the contract
-    uint256 public totalSupply;
-    uint256 public tokenFee;
+    uint256 public totalSupply;             // Returns the total staked tokens within the contract
+    uint256 public tokenFee;                // 100 = 1%
 
     struct Balance {
         uint256 balance;
