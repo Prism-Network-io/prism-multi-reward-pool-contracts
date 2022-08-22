@@ -6,11 +6,12 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { MockStaking, MockReward, MultiRewardPool } from "../typechain";
 import { BigNumber } from "ethers";
 
-describe("Multi Reward Pool Tests", () => {
-
   // Typechain setup
   let mockStaking: MockStaking;
+  let mockStakingFee: MockStaking;
   let mockReward: MockReward;
+  let mockReward2: MockReward;
+  let mockReward3: MockReward;
   let multiRewardPool: MultiRewardPool;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -31,33 +32,52 @@ describe("Multi Reward Pool Tests", () => {
   let addr2percentOfTotalStaked = 0;
   let totalStakedTokens: BigNumber;
 
-  // Before each test reset test accounts states + redeploy test contracts 
   before(async () => {
 
-    // Reset test users state
     [owner, addr1, addr2] = await ethers.getSigners();
 
     //Deploy Mocks
     console.log("Deploying mock tokens");
 
     // Deploy MockStaking
-    mockStaking = (await (await ethers.getContractFactory("MockStaking")).deploy("Reward Token", "REWARD", 1000, 18)) as MockStaking;
+    mockStaking = (await (await ethers.getContractFactory("MockStaking")).deploy("Staking Token", "STAKING", 1000, 18)) as MockStaking;
     await mockStaking.deployed();
     console.log('Mock Staking Token deployed to:', mockStaking.address);
+
+    // Deploy MockStakingFee
+    mockStakingFee = (await (await ethers.getContractFactory("MockStakingFee")).deploy("Staking Token Fee", "STAKING_FEE", 1000, 18)) as MockStaking;
+    await mockStakingFee.deployed();
+    console.log('Mock Staking Fee Token deployed to:', mockStakingFee.address);
 
     // Deploy MockReward
     mockReward = (await (await ethers.getContractFactory("MockReward")).deploy("Reward Token", "REWARD", 1000, 18)) as MockReward;
     await mockReward.deployed();
     console.log('Mock Reward Token deployed to:', mockReward.address);
 
+    // Deploy MockReward2
+    mockReward2 = (await (await ethers.getContractFactory("MockReward")).deploy("Reward Token 2", "REWARD2", 1000, 18)) as MockReward;
+    await mockReward2.deployed();
+    console.log('Mock Reward 2 Token deployed to:', mockReward2.address);
+
+    // Deploy MockReward3
+    mockReward3 = (await (await ethers.getContractFactory("MockReward")).deploy("Reward Token 3", "REWARD3", 1000, 18)) as MockReward;
+    await mockReward3.deployed();
+    console.log('Mock Reward 3 Token deployed to:', mockReward3.address);
+
     // Deploy MultiRewardPool
     multiRewardPool = (await (await ethers.getContractFactory("MultiRewardPool")).deploy(mockStaking.address, treasuryAddress, devFee, tokenFee)) as MultiRewardPool;
     await multiRewardPool.deployed();
     console.log('Mutli-Reward-Pool Contract for Staking Token:', mockStaking.address, 'deployed at:', multiRewardPool.address);
     
-    // Adds Reward Pool
+    // Adds Reward Pools
     await multiRewardPool.addRewardPool(mockReward.address);
     console.log('Reward Pool added for Reward Token:', mockReward.address);
+    
+    await multiRewardPool.addRewardPool(mockReward2.address);
+    console.log('Reward Pool 2 added for Reward Token 2:', mockReward2.address);
+
+    await multiRewardPool.addRewardPool(mockReward3.address);
+    console.log('Reward Pool 3 added for Reward Token 3:', mockReward3.address);
 
     // Transfer STAKE to users
     await mockStaking.transfer(addr1.address, addr1StakeAmount);
@@ -110,7 +130,6 @@ describe("Multi Reward Pool Tests", () => {
       expect(rewardsAdded).to.equal(poolRewards);
     });
 
-
     it("Should set duration of pool as 4000 seconds", async function () {
       expect((await multiRewardPool.poolInfo(0)).duration).to.equal(poolDuration);
     });
@@ -162,4 +181,33 @@ describe("Multi Reward Pool Tests", () => {
 
   });
 
-});
+  describe("Two Reward Pools: Test multiple rewards work", async () => {
+
+    // Start Reward Pools
+    it("Should start reward pool 2 at poolId = 1", async function () {
+      await mockReward2.approve(multiRewardPool.address, ethers.utils.parseEther("999999999"));
+      await multiRewardPool.startRewardPool(1, poolRewards, poolDuration);
+      expect((await multiRewardPool.poolInfo(1)).rewardPoolID).to.equal(1);
+    });
+
+    it("Should start reward pool 3 at poolId = 2", async function () {
+      await mockReward3.approve(multiRewardPool.address, ethers.utils.parseEther("999999999"));
+      await multiRewardPool.startRewardPool(2, poolRewards, poolDuration);
+      expect((await multiRewardPool.poolInfo(2)).rewardPoolID).to.equal(2);
+    });
+
+    it("Should distribute both reward tokens", async function () {
+      const result1before = await multiRewardPool.earned(addr1.address, 1)
+      const result2before = await multiRewardPool.earned(addr1.address, 2)
+
+      await ethers.provider.send('evm_increaseTime', [1000]); // Increase time by 1000
+      await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
+
+      const result1after = await multiRewardPool.earned(addr1.address, 1)
+      const result2after = await multiRewardPool.earned(addr1.address, 2)
+      
+      expect(Number(result1after)).to.be.greaterThan(Number(result1before));
+      expect(Number(result2after)).to.be.greaterThan(Number(result2before));
+    });
+
+  });
