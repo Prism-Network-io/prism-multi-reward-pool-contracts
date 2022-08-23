@@ -10,8 +10,8 @@ import "./interfaces/IERC20Metadata.sol";
  * @title MultiRewardPool
  * @author Empire Capital
  * @dev Stake token to earn multiple different reward tokens
-
- Credit to Synthetix for original StakingReward contract
+ *
+ * Credit to Synthetix for original StakingReward contract
  */
 contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
@@ -409,24 +409,6 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
                 eject(i);
             }
         }
-    }
-
-    /** @dev Removes a specific pool in the array, leaving the pid slot empty */
-    function removeRewardPool(uint256 _pid) external onlyOwner {
-        PoolInfo storage pool = poolInfo[_pid];
-        addedRewardTokens[address(pool.rewardTokenAddress)] = false;
-        eject(_pid);
-        delete poolInfo[_pid];
-    }
-
-    /** @dev Removes all reward pools */
-    function removeAllRewardPools() external onlyOwner {
-        for (uint256 i = 0; i < poolInfo.length; i++) {
-            PoolInfo storage pool = poolInfo[i];
-            addedRewardTokens[address(pool.rewardTokenAddress)] = false;
-        }
-        ejectAll();
-        delete poolInfo;
     }
 
     /** @dev Forcefully retire a pool. Only sets the period finish to 0. Will prevent more rewards from being distributed */
