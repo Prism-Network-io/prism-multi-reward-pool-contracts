@@ -18,7 +18,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     uint256 public immutable stakingTokenMultiplier;
 
     struct PoolInfo {
-        IERC20Metadata rewardTokenAddress;
+        IERC20Metadata rewardToken;
         uint256 rewardPoolID;
         uint256 duration;
         uint256 periodFinish;
@@ -96,7 +96,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
 
-            if (address(pool.rewardTokenAddress) == address(0)) {
+            if (address(pool.rewardToken) == address(0)) {
                 continue;
             } else {
                 updateRewardPerTokenStored(i);
@@ -220,14 +220,14 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             PoolInfo storage pool = poolInfo[i];
             uint256 reward = rewardsInPool[i][msg.sender].rewards;
 
-            if (address(pool.rewardTokenAddress) == address(0) || reward == 0) {
+            if (address(pool.rewardToken) == address(0) || reward == 0) {
                 continue;
             } else {
                 rewardsInPool[i][msg.sender].rewards = 0;
-                pool.rewardTokenAddress.safeTransfer(msg.sender, reward);
+                pool.rewardToken.safeTransfer(msg.sender, reward);
                 emit RewardPaid(
                     msg.sender,
-                    address(pool.rewardTokenAddress),
+                    address(pool.rewardToken),
                     reward
                 );
             }
@@ -243,18 +243,18 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             PoolInfo storage pool = poolInfo[i];
             uint256 reward = rewardsInPool[i][msg.sender].rewards;
 
-            if (address(pool.rewardTokenAddress) == address(0) || reward == 0) {
+            if (address(pool.rewardToken) == address(0) || reward == 0) {
                 continue;
             } else {
                 rewardsInPool[i][msg.sender].rewards = 0;
 
-                if (address(pool.rewardTokenAddress) == address(stakingToken)) {
+                if (address(pool.rewardToken) == address(stakingToken)) {
                     stake(reward);
                 } else {
-                    pool.rewardTokenAddress.safeTransfer(msg.sender, reward);
+                    pool.rewardToken.safeTransfer(msg.sender, reward);
                     emit RewardPaid(
                         msg.sender,
-                        address(pool.rewardTokenAddress),
+                        address(pool.rewardToken),
                         reward
                     );
                 }
@@ -281,7 +281,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         poolInfo.push(
             PoolInfo({
-                rewardTokenAddress: _rewardToken,
+                rewardToken: _rewardToken,
                 rewardPoolID: _rewardTokenID,
                 duration: 0,
                 periodFinish: 0,
@@ -311,7 +311,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 totalRewards;
 
         // Transfer reward token from caller to contract
-        pool.rewardTokenAddress.safeTransferFrom(
+        pool.rewardToken.safeTransferFrom(
             msg.sender,
             address(this),
             _reward
@@ -348,7 +348,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         emit RewardPoolExtended(
             _pid,
-            address(pool.rewardTokenAddress),
+            address(pool.rewardToken),
             rewardsRemaining,
             _reward,
             totalRewards,
@@ -369,7 +369,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 timeNow = block.timestamp;
 
         // Transfer reward token from caller to contract
-        pool.rewardTokenAddress.safeTransferFrom(
+        pool.rewardToken.safeTransferFrom(
             msg.sender,
             address(this),
             _reward
@@ -394,7 +394,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.periodFinish = timeNow.add(pool.duration);
         emit RewardPoolStarted(
             _pid,
-            address(pool.rewardTokenAddress),
+            address(pool.rewardToken),
             _reward,
             pool.duration,
             pool.periodFinish
@@ -410,14 +410,14 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         require(block.timestamp >= pool.periodFinish.add(7 days),
             "Can only eject 7 days after pool has finished"
         );
-        uint256 currBalance = pool.rewardTokenAddress.balanceOf(address(this));
+        uint256 currBalance = pool.rewardToken.balanceOf(address(this));
 
         // If Staking Token = Reward Token of Pool, do not withdraw the users staked tokens
-        if (address(stakingToken) == address(pool.rewardTokenAddress)) {
+        if (address(stakingToken) == address(pool.rewardToken)) {
             currBalance = currBalance.sub(totalSupply);
         }
 
-        pool.rewardTokenAddress.safeTransfer(msg.sender, currBalance);
+        pool.rewardToken.safeTransfer(msg.sender, currBalance);
     }
 
     /// @notice Ejects any remaining reward tokens from all reward pools
@@ -426,7 +426,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         for (uint256 i = 0; i < poolInfo.length; i++) {
             PoolInfo storage pool = poolInfo[i];
 
-            if (address(pool.rewardTokenAddress) == address(0)) {
+            if (address(pool.rewardToken) == address(0)) {
                 continue;
             } else {
                 eject(i);
