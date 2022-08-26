@@ -10,17 +10,13 @@ abstract contract LPTokenWrapper is Ownable {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable stakingToken;
-    uint256 public immutable devFee;        // 10 = 1%
-    uint256 public totalSupply;             // Returns the total staked tokens within the contract
-    uint256 public tokenFee;                // 100 = 1%
-
-    struct Balance {
-        uint256 balance;
-    }
+    uint256 public immutable devFee;  // 10 = 1%
+    uint256 public totalSupply;       // Returns the total staked tokens on the contract
+    uint256 public tokenFee;          // 100 = 1%
 
     address public treasury;    // The address to receive devFee
 
-    mapping(address => Balance) internal _balances;
+    mapping(address => uint256) internal _balances;
 
     constructor(
         uint256 _devFee,
@@ -34,12 +30,14 @@ abstract contract LPTokenWrapper is Ownable {
         tokenFee = _tokenFee;
     }
 
-    // Returns staking balance of the account
+    /// @notice Returns staking balance of an account
+    /// @param account The account to check
     function balanceOf(address account) public view returns (uint256) {
-        return _balances[account].balance;
+        return _balances[account];
     }
 
-    // Stake funds into the pool
+    /// @notice Stakes a users tokens to start earning rewards
+    /// @param amount The amount of tokens to stake
     function stake(uint256 amount) public virtual {
         // Transfer staking token from caller to contract
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
@@ -48,22 +46,24 @@ abstract contract LPTokenWrapper is Ownable {
         if (tokenFee > 0) {
             uint256 tokenFeeBalance = amount.mul(tokenFee).div(10000);
             uint256 stakedBalance = amount.sub(tokenFeeBalance);
-            _balances[msg.sender].balance = _balances[msg.sender].balance.add(stakedBalance);
+            _balances[msg.sender] = _balances[msg.sender].add(stakedBalance);
             totalSupply = totalSupply.add(stakedBalance);
             return;
         } else {
-            _balances[msg.sender].balance = _balances[msg.sender].balance.add(amount);
+            _balances[msg.sender] = _balances[msg.sender].add(amount);
             totalSupply = totalSupply.add(amount);
             return;
         }
 
     }
 
-    // Subtract balances withdrawn from the user
+    /// @notice Withdraws a users staked tokens
+    /// @dev Withdrawing incurs a fee specified as devFee
+    /// @param amount The amount of tokens to withdraw
     function withdraw(uint256 amount) public virtual {
         // Reduce sender's balances and total supply
         totalSupply = totalSupply.sub(amount);
-        _balances[msg.sender].balance = _balances[msg.sender].balance.sub(
+        _balances[msg.sender] = _balances[msg.sender].sub(
             amount
         );
 

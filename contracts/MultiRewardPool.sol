@@ -116,6 +116,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     }
 
     /// @notice Updates the last time the calculations were done for pool rewards of a reward pool
+    /// @dev If pool has finished, return that time instead
     /// @param _pid The pool ID of the reward pool to get lastUpdateTime
     function lastTimeRewardsActive(uint256 _pid) public view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
@@ -174,7 +175,6 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         return
             _balances[account]
-                .balance
                 .mul(rewardPerToken(_pid)
                 .sub(rewardPerTokenPaid))
                 .div(stakingTokenMultiplier)
