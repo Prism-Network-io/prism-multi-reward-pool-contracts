@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.4;
 
-import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./libraries/Math.sol";
+import "./libraries/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
 import "./interfaces/IERC20Metadata.sol";
 
@@ -72,7 +72,6 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 _devFee,
         uint256 _tokenFee
     )
-        public
         LPTokenWrapper(_devFee, _stakingToken, _treasury, _tokenFee)
     {
         require(
@@ -153,13 +152,12 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         // The returrn value is time-based on last time the contract had rewards active multipliede by the reward-rate.
         // It's evened out with a division of bonus effective supply.
         return
-            pool.rewardPerTokenStored.add(
+            pool.rewardPerTokenStored +
                 lastTimeRewardsActive(_pid)
-                    .sub(pool.lastUpdateTime)
-                    .mul(pool.rewardRate)
-                    .mul(stakingTokenMultiplier)
-                    .div(totalSupply)
-            );
+                    - pool.lastUpdateTime
+                    * pool.rewardRate
+                    * stakingTokenMultiplier
+                    / totalSupply;
     }
 
     /// @notice Returns the amount of reward tokens claimable by the user at specified reward pool
@@ -175,10 +173,10 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
         return
             _balances[account]
-                .mul(rewardPerToken(_pid)
-                .sub(rewardPerTokenPaid))
-                .div(stakingTokenMultiplier)
-                .add(reward);
+                * rewardPerToken(_pid)
+                - rewardPerTokenPaid
+                / stakingTokenMultiplier
+                + reward;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -326,25 +324,25 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         // Update reward rate
         // if pool has already finished
         if (timeNow > pool.periodFinish) {
-            pool.rewardRate = _reward.div(_duration);
+            pool.rewardRate = _reward / _duration;
             totalRewards = _reward;
         } else {
             // if pool has not finished yet
             // Remaining time for the pool
-            uint256 remainingTime = pool.periodFinish.sub(timeNow);
+            uint256 remainingTime = pool.periodFinish - timeNow;
             // And the rewards
-            rewardsRemaining = remainingTime.mul(pool.rewardRate);
+            rewardsRemaining = remainingTime * pool.rewardRate;
             // Find new amount of rewards in pool
-            totalRewards = rewardsRemaining.add(_reward);
+            totalRewards = rewardsRemaining + _reward;
             // Set the current rate
-            pool.rewardRate = totalRewards.div(pool.duration);            
+            pool.rewardRate = totalRewards / pool.duration;
         }
 
         // Set the last updated time
         pool.lastUpdateTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = timeNow.add(pool.duration);
+        pool.periodFinish = timeNow + pool.duration;
 
         emit RewardPoolExtended(
             _pid,
@@ -382,7 +380,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.duration = _duration;
 
         // Set the current rate
-        pool.rewardRate = _reward.div(pool.duration);
+        pool.rewardRate = _reward / pool.duration;
 
         // Set the last updated time
         pool.lastUpdateTime = timeNow;
@@ -391,7 +389,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         pool.startTime = timeNow;
 
         // Add the period to be equal to duration set
-        pool.periodFinish = timeNow.add(pool.duration);
+        pool.periodFinish = timeNow + pool.duration;
         emit RewardPoolStarted(
             _pid,
             address(pool.rewardToken),
@@ -407,14 +405,14 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     function eject(uint256 _pid) public onlyOwner {
         PoolInfo storage pool = poolInfo[_pid];
 
-        require(block.timestamp >= pool.periodFinish.add(7 days),
+        require(block.timestamp >= pool.periodFinish + 7 days,
             "Can only eject 7 days after pool has finished"
         );
         uint256 currBalance = pool.rewardToken.balanceOf(address(this));
 
         // If Staking Token = Reward Token of Pool, do not withdraw the users staked tokens
         if (address(stakingToken) == address(pool.rewardToken)) {
-            currBalance = currBalance.sub(totalSupply);
+            currBalance = currBalance - totalSupply;
         }
 
         pool.rewardToken.safeTransfer(msg.sender, currBalance);
@@ -458,7 +456,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
             addedRewardTokens[tokenAddress] == false,
             "Cannot withdraw reward token"
         );
-        IERC20(tokenAddress).safeTransfer(msg.sender, tokenAmount);
+        IERC20Metadata(tokenAddress).safeTransfer(msg.sender, tokenAmount);
     }
 
     /// @notice Sets a new treasury address
