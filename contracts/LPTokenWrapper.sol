@@ -28,13 +28,15 @@ abstract contract LPTokenWrapper is Ownable {
         tokenFee = _tokenFee;
     }
 
-    /// @notice Returns staking balance of an account
+    /// @dev Returns staking balance of an account
     /// @param account The account to check
+    /// @return The amount of stakingTokens staked by `account`
     function balanceOf(address account) public view returns (uint256) {
         return _balances[account];
     }
 
-    /// @notice Stakes a users tokens to start earning rewards
+    /// @notice Stakes `amount` of stakingToken onto the contract
+    /// @dev Stakes a users tokens to start earning rewards
     /// @param amount The amount of tokens to stake
     function stake(uint256 amount) public virtual {
         // Transfer staking token from caller to contract
@@ -55,7 +57,7 @@ abstract contract LPTokenWrapper is Ownable {
 
     }
 
-    /// @notice Withdraws a users staked tokens
+    /// @notice Withdraws `amount` of stakingToken from the contract
     /// @dev Withdrawing incurs a fee specified as devFee
     /// @param amount The amount of tokens to withdraw
     function withdraw(uint256 amount) public virtual {
