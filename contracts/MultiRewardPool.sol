@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.4;
 
+import "./libraries/Ownable.sol";
+import "./libraries/SafeERC20.sol";
 import "./libraries/Math.sol";
 import "./libraries/ReentrancyGuard.sol";
-import "./LPTokenWrapper.sol";
 import "./interfaces/IERC20Metadata.sol";
 
 /**
@@ -13,9 +14,16 @@ import "./interfaces/IERC20Metadata.sol";
  *
  * Credit to Synthetix for original StakingReward contract. We stand on the shoulders of giants.
  */
-contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
+contract MultiRewardPool is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
+
+    IERC20Metadata public immutable stakingToken;
     uint256 public immutable stakingTokenMultiplier;
+    uint256 public immutable devFee;    // 10 = 1%
+    uint256 public immutable tokenFee;  // 100 = 1%
+    uint256 public totalSupply;         // Returns the total staked tokens on the contract
+
+    address public treasury;    // The address to receive devFee
 
     struct PoolInfo {
         IERC20Metadata rewardToken;
@@ -35,6 +43,7 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
 
     PoolInfo[] public poolInfo;
 
+    mapping(address => uint256) internal _balances;
     mapping(address => bool) public addedRewardTokens;
     mapping(uint256 => mapping(address => UserRewardInfo)) public rewardsInPool;
 
@@ -72,13 +81,16 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
         uint256 _devFee,
         uint256 _tokenFee
     )
-        LPTokenWrapper(_devFee, _stakingToken, _treasury, _tokenFee)
     {
         require(
             _stakingToken != address(0) &&
                 _treasury != address(0),
             "!constructor"
         );
+        devFee = _devFee;
+        stakingToken = IERC20Metadata(_stakingToken);
+        treasury = _treasury;
+        tokenFee = _tokenFee;
         stakingTokenMultiplier =
             10**uint256(IERC20Metadata(_stakingToken).decimals());
     }
@@ -190,20 +202,46 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
     /// @notice Stakes `amount` of stakingToken onto the contract
     /// @dev Stakes a users tokens to start earning rewards
     /// @param amount The amount of tokens to stake
-    function stake(uint256 amount) public override nonReentrant {
+    function stake(uint256 amount) public nonReentrant {
         require(amount > 0, "Cannot stake 0");
         updateReward(msg.sender);
-        super.stake(amount);
+        
+        // Transfer staking token from caller to contract
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+
+        // Increment sender's balances and total supply
+        if (tokenFee > 0) {
+            uint256 tokenFeeBalance = amount * tokenFee / 10000;
+            uint256 stakedBalance = amount - tokenFeeBalance;
+            _balances[msg.sender] += stakedBalance;
+            totalSupply += stakedBalance;
+        } else {
+            _balances[msg.sender] += amount;
+            totalSupply += amount;
+        }
+
         emit Staked(msg.sender, amount);
     }
 
     /// @notice Withdraws `amount` of stakingToken from the contract
     /// @dev Withdrawing incurs a fee specified as devFee
     /// @param amount The amount of tokens to withdraw
-    function withdraw(uint256 amount) public override nonReentrant {
+    function withdraw(uint256 amount) public nonReentrant {
         require(amount > 0, "Cannot withdraw 0");
         updateReward(msg.sender);
-        super.withdraw(amount);
+
+        // Reduce sender's balances and total supply
+        totalSupply -= amount;
+        _balances[msg.sender] -= amount;
+
+        // Calculate the withdraw tax
+        uint256 tax = amount * devFee / 1000;
+
+        // Transfer the tokens to user
+        stakingToken.safeTransfer(msg.sender, amount - tax);
+        // Tax to treasury
+        stakingToken.safeTransfer(treasury, tax);
+
         emit Withdrawn(msg.sender, amount);
     }
 
@@ -263,6 +301,13 @@ contract MultiRewardPool is LPTokenWrapper, ReentrancyGuard {
                 }
             }
         }
+    }
+
+    /// @dev Returns staking balance of an account
+    /// @param account The account to check
+    /// @return The amount of stakingTokens staked by `account`
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
     }
 
     /*//////////////////////////////////////////////////////////////
