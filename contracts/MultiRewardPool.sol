@@ -19,7 +19,7 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
 
     IERC20Metadata public immutable stakingToken;
     uint256 public immutable stakingTokenMultiplier;
-    uint256 public immutable devFee;    // 10 = 1%
+    uint256 public immutable devFee;    // 100 = 1%
     uint256 public immutable tokenFee;  // 100 = 1%
     uint256 public totalSupply;         // Returns the total staked tokens on the contract
 
@@ -75,6 +75,10 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
         uint256 rewardPeriodFinish
     );
 
+    /// @param _stakingToken The token that can be staked on the contract
+    /// @param _treasury The address of the treasury that receives devFee
+    /// @param _devFee The fee in percentage to take from staked tokens when withdrawing (100 = 1%)
+    /// @param _tokenFee The fee in percentage of any transfer fees for stakingToken (100 = 1%)
     constructor(
         address _stakingToken,
         address _treasury,
@@ -163,8 +167,8 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
             return pool.rewardPerTokenStored;
         }
 
-        // The returrn value is time-based on last time the contract had rewards active multipliede by the reward-rate.
-        // It's evened out with a division of bonus effective supply.
+        // The returrn value is time-based on last time the contract had rewards active
+        // multiplied by the reward-rate and it's evened out with a division of bonus effective supply.
         return
             pool.rewardPerTokenStored +
                 lastTimeRewardsActive(_pid)
@@ -235,7 +239,7 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
         _balances[msg.sender] -= amount;
 
         // Calculate the withdraw tax
-        uint256 tax = amount * devFee / 1000;
+        uint256 tax = amount * devFee / 10000;
 
         // Transfer the tokens to user
         stakingToken.safeTransfer(msg.sender, amount - tax);

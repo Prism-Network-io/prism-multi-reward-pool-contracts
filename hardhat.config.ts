@@ -9,8 +9,6 @@ import "solidity-coverage";
 
 dotenv.config();
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -19,28 +17,20 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
 const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.6.12",
+    version: "0.8.4",
     settings: {
-      // "viaIR": true, // fixes stack too deep errors w/ optimized via-IR code generation pipeline
       optimizer: {
         enabled: true,
         runs: 1000
       }
+      // "viaIR": true, // fixes stack too deep errors w/ optimized IR-based code generation pipeline
     }
   },
   networks: {
-    rinkeby: {
-      url: process.env.RINKEBY_URL || "",
-      chainId: 4,
-      accounts: deployerKey,
-    },
     goerli: {
       url: process.env.GOERLI_URL || "",
       chainId: 5,
@@ -51,11 +41,10 @@ const config: HardhatUserConfig = {
       chainId: 11155111,
       accounts: deployerKey,
     },
-    kovan: {
-      url: process.env.KOVAN_URL || "",
+    bsctest: {
+      url: process.env.BSCTEST_URL || "",
+      chainId: 97,
       accounts: deployerKey,
-      chainId: 42,
-      gas: 30000000,
     },
     mainet: {
       url: process.env.MAINET_URL || "",
@@ -125,6 +114,5 @@ const config: HardhatUserConfig = {
     ]
   }
 };
-
 
 export default config;
