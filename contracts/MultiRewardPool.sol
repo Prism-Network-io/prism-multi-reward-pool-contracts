@@ -170,12 +170,11 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
         // The returrn value is time-based on last time the contract had rewards active
         // multiplied by the reward-rate and it's evened out with a division of bonus effective supply.
         return
-            pool.rewardPerTokenStored +
-                lastTimeRewardsActive(_pid)
-                    - pool.lastUpdateTime
-                    * pool.rewardRate
-                    * stakingTokenMultiplier
-                    / totalSupply;
+            pool.rewardPerTokenStored
+                + (pool.rewardRate 
+                * (lastTimeRewardsActive(_pid) - pool.lastUpdateTime)
+                * stakingTokenMultiplier)
+                / totalSupply;
     }
 
     /// @notice The amount of reward tokens that `account` has earned in pool ID `_pid`
@@ -192,11 +191,10 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
         uint256 rewardPerTokenPaid = rewardsInPool[_pid][msg.sender].userRewardPerTokenPaid;
 
         return
-            _balances[account]
-                * rewardPerToken(_pid)
-                - rewardPerTokenPaid
-                / stakingTokenMultiplier
-                + reward;
+            ((_balances[account]
+            * (rewardPerToken(_pid) - rewardPerTokenPaid))
+            / stakingTokenMultiplier)
+            + reward;
     }
 
     /*//////////////////////////////////////////////////////////////
