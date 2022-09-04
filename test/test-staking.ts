@@ -14,9 +14,11 @@ import { BigNumber } from "ethers";
   let mockReward3: MockReward;
   let multiRewardPool: MultiRewardPool;
   let multiRewardPoolFee: MultiRewardPool;
+  let multiRewardPoolWithdraw: MultiRewardPool;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
+  let addr3: SignerWithAddress;
 
   // Defined Variables for tests
   const treasuryAddress = "0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB";
@@ -29,6 +31,7 @@ import { BigNumber } from "ethers";
   const addr1StakeAmount = ethers.utils.parseEther("75");
   const addr1StakeAmountFee = ethers.utils.parseEther("100");
   const addr2StakeAmount = ethers.utils.parseEther("25");
+  const addr3StakeAmountWithdraw = ethers.utils.parseEther("100");
 
   // Initialize Variables
   let addr1percentOfTotalStaked = 0;
@@ -37,7 +40,7 @@ import { BigNumber } from "ethers";
 
   before(async () => {
 
-    [owner, addr1, addr2] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
     //Deploy Mocks
     console.log("Deploying mock tokens");
@@ -87,11 +90,18 @@ import { BigNumber } from "ethers";
     await multiRewardPoolFee.deployed();
     console.log('Mutli-Reward-Pool-Fee Contract for STAKE_FEE:', mockStakingFee.address, 'deployed at:', multiRewardPoolFee.address);
 
+    // Deploy MultiRewardPoolWithdraw
+    multiRewardPoolWithdraw = (await (await ethers.getContractFactory("MultiRewardPool")).deploy(mockStaking.address, treasuryAddress, devFee, tokenFee)) as MultiRewardPool;
+    await multiRewardPoolWithdraw.deployed();
+    console.log('Mutli-Reward-Pool Contract for WITHDRAW_TEST:', mockStaking.address, 'deployed at:', multiRewardPoolWithdraw.address);
+
     // Transfer STAKE to users
     await mockStaking.transfer(addr1.address, addr1StakeAmount);
     console.log('Transfer', addr1StakeAmount, 'STAKE to addr1');
     await mockStaking.transfer(addr2.address, addr2StakeAmount);
     console.log('Transfer', addr2StakeAmount, 'STAKE to addr2');
+    await mockStaking.transfer(addr3.address, addr3StakeAmountWithdraw);
+    console.log('Transfer', addr3StakeAmountWithdraw, 'STAKE to addr3');
 
     // Have users stake in multi reward pool (STAKE)
     await mockStaking.connect(addr1).approve(multiRewardPool.address, ethers.utils.parseEther("999999999"));
@@ -111,6 +121,11 @@ import { BigNumber } from "ethers";
     // Have users stake in multi reward pool (STAKE_FEE)
     await mockStakingFee.approve(multiRewardPoolFee.address, ethers.utils.parseEther("999999999"));
     await multiRewardPoolFee.stake(addr1StakeAmountFee);
+
+    // Have users stake and withdraw in multi reward pool (WITHDRAW_TEST)
+    await mockStaking.connect(addr3).approve(multiRewardPoolWithdraw.address, ethers.utils.parseEther("999999999"));
+    await multiRewardPoolWithdraw.connect(addr3).stake(addr3StakeAmountWithdraw);
+    await multiRewardPoolWithdraw.connect(addr3).withdraw(addr3StakeAmountWithdraw);
   });
 
   describe("Single Reward Pool: Test distribution over time", async () => {
@@ -234,6 +249,20 @@ import { BigNumber } from "ethers";
     it("Should update users staked balance by correct amount", async function () {
       const addr1stakedFeeContract = await multiRewardPoolFee.balanceOf(owner.address);
       expect(Number(addr1stakedFeeContract)).to.equal(Number(ethers.utils.parseEther("90")));
+    });
+
+  });
+
+  describe("Test Withdraw Fee (devFee)", async () => {
+    
+    it("Should take correct devFee from user withdrawing", async function () {
+      const stakingBalanceAfterWithdraw = await mockStaking.balanceOf(addr3.address);
+      expect(Number(stakingBalanceAfterWithdraw)).to.equal(Number(ethers.utils.parseEther("98.5")));
+    });
+
+    it("Should add correct amount to treasury address when user withdraws", async function () {
+      const treasuryBalanceAfterWithdraw = await mockStaking.balanceOf(treasuryAddress);
+      expect(Number(treasuryBalanceAfterWithdraw)).to.equal(Number(ethers.utils.parseEther("1.5")));
     });
 
   });
