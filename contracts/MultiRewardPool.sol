@@ -9,10 +9,11 @@ import "./interfaces/IERC20Metadata.sol";
 
 /**
  * @title MultiRewardPool
- * @author Empire Capital
+ * @author Empire Capital (Tranquil Flow, Splnty, 0xbami.eth)
  * @dev Stake token to earn multiple different reward tokens
  *
- * Credit to Synthetix for original StakingReward contract. We stand on the shoulders of giants.
+ * Credit to Synthetix for original StakingReward contract. https://github.com/Synthetixio
+ * We stand on the shoulders of giants.
  */
 contract MultiRewardPool is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
