@@ -279,7 +279,7 @@ contract MultiRewardPool is Ownable, ReentrancyGuard {
     }
 
     /// @dev Gets reward tokens and re-stakes rewards if rewardToken = stakingToken
-    function getRewardCompound() public nonReentrant {
+    function getRewardCompound() public {
         updateReward(msg.sender);
 
         // loop through all the reward pools for a user

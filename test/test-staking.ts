@@ -15,6 +15,7 @@ import { BigNumber } from "ethers";
   let multiRewardPool: MultiRewardPool;
   let multiRewardPoolFee: MultiRewardPool;
   let multiRewardPoolWithdraw: MultiRewardPool;
+  let multiRewardPoolCompound: MultiRewardPool;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -88,14 +89,23 @@ import { BigNumber } from "ethers";
     // Deploy MultiRewardPoolFee
     multiRewardPoolFee = (await (await ethers.getContractFactory("MultiRewardPool")).deploy(mockStakingFee.address, treasuryAddress, devFee, tokenFeeActive)) as MultiRewardPool;
     await multiRewardPoolFee.deployed();
-    console.log('Mutli-Reward-Pool-Fee Contract for STAKE_FEE:', mockStakingFee.address, 'deployed at:', multiRewardPoolFee.address);
+    console.log('Mutli-Reward-Pool-Fee Contract for STAKE_FEE_TEST:', mockStakingFee.address, 'deployed at:', multiRewardPoolFee.address);
 
     // Deploy MultiRewardPoolWithdraw
     multiRewardPoolWithdraw = (await (await ethers.getContractFactory("MultiRewardPool")).deploy(mockStaking.address, treasuryAddress, devFee, tokenFee)) as MultiRewardPool;
     await multiRewardPoolWithdraw.deployed();
     console.log('Mutli-Reward-Pool Contract for WITHDRAW_TEST:', mockStaking.address, 'deployed at:', multiRewardPoolWithdraw.address);
 
+    // Deploy MultiRewardPoolCompound
+    multiRewardPoolCompound = (await (await ethers.getContractFactory("MultiRewardPool")).deploy(mockStaking.address, treasuryAddress, devFee, tokenFee)) as MultiRewardPool;
+    await multiRewardPoolCompound.deployed();
+    console.log('Mutli-Reward-Pool Contract for COMPOUND_TEST:', mockStaking.address, 'deployed at:', multiRewardPoolCompound.address);
+    await multiRewardPoolCompound.addRewardPool(mockStaking.address);
+    console.log('Reward Pool added for Staking Token on Compound Test Pool');
+
     // Transfer STAKE to users
+    await mockStaking.transfer(addr1.address, addr1StakeAmount);
+    console.log('Transfer', addr1StakeAmount, 'STAKE to addr1');
     await mockStaking.transfer(addr1.address, addr1StakeAmount);
     console.log('Transfer', addr1StakeAmount, 'STAKE to addr1');
     await mockStaking.transfer(addr2.address, addr2StakeAmount);
@@ -118,7 +128,7 @@ import { BigNumber } from "ethers";
     console.log(addr1.address, '(addr1) staked', addr1StakeAmount, 'representing', addr1percentOfTotalStaked, '% of the supply');
     console.log(addr2.address, '(addr2) staked', addr2StakeAmount, 'representing', addr2percentOfTotalStaked, '% of the supply');
 
-    // Have users stake in multi reward pool (STAKE_FEE)
+    // Have owner stake in multi reward pool (STAKE_FEE_TEST)
     await mockStakingFee.approve(multiRewardPoolFee.address, ethers.utils.parseEther("999999999"));
     await multiRewardPoolFee.stake(addr1StakeAmountFee);
 
@@ -126,6 +136,10 @@ import { BigNumber } from "ethers";
     await mockStaking.connect(addr3).approve(multiRewardPoolWithdraw.address, ethers.utils.parseEther("999999999"));
     await multiRewardPoolWithdraw.connect(addr3).stake(addr3StakeAmountWithdraw);
     await multiRewardPoolWithdraw.connect(addr3).withdraw(addr3StakeAmountWithdraw);
+
+    // Have users stake in multi reward pool (COMPOUND_TEST)
+    await mockStaking.connect(addr1).approve(multiRewardPoolCompound.address, ethers.utils.parseEther("999999999"));
+    await multiRewardPoolCompound.connect(addr1).stake(1);
   });
 
   describe("Single Reward Pool: Test distribution over time", async () => {
@@ -239,7 +253,7 @@ import { BigNumber } from "ethers";
 
   });
   
-  describe("Staking Token with Fee: Test tokenFee functionality", async () => {
+  describe("Staking Token with Fee: Test tokenFee functionality STAKE_FEE_TEST", async () => {
 
     it("Should update totalSupply by correct amount", async function () {
       const totalSupplyFeeContract = await multiRewardPoolFee.totalSupply();
@@ -253,7 +267,7 @@ import { BigNumber } from "ethers";
 
   });
 
-  describe("Test Withdraw Fee (devFee)", async () => {
+  describe("Test Withdraw Fee (devFee) WITHDRAW_TEST", async () => {
     
     it("Should take correct devFee from user withdrawing", async function () {
       const stakingBalanceAfterWithdraw = await mockStaking.balanceOf(addr3.address);
@@ -265,4 +279,24 @@ import { BigNumber } from "ethers";
       expect(Number(treasuryBalanceAfterWithdraw)).to.equal(Number(ethers.utils.parseEther("1.5")));
     });
 
+  });
+
+  describe("Test getRewardCompound COMPOUND_TEST", async () => {
+
+    it("Should restake rewards if reward token = staking token", async function () {
+      const stakedAmountBeforeCompound = await multiRewardPoolCompound.balanceOf(addr1.address);
+
+      await mockStaking.approve(multiRewardPoolCompound.address, ethers.utils.parseEther("999999999"));
+      await multiRewardPoolCompound.startRewardPool(0, 100000, poolDuration);
+
+      await ethers.provider.send('evm_increaseTime', [1000]); // Increase time by 1000
+      await ethers.provider.send('evm_mine', []) // Force mine to update block timestamp
+
+      await multiRewardPoolCompound.connect(addr1).getRewardCompound();
+
+      const stakedAmountAfterCompound = await multiRewardPoolCompound.balanceOf(addr1.address);
+
+      expect(Number(stakedAmountAfterCompound)).to.be.greaterThan(Number(stakedAmountBeforeCompound));
+    });
+  
   });
